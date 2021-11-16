@@ -1,0 +1,41 @@
+{
+  "name": "@attorn/electron-storage",
+  "author": "qafoori",
+  "version": "2.1.1",
+  "description": "A really light wight and convenient package that has been implemented for you to manage your users data through an electron application",
+  "homepage": "https://github.com/attorn/-attorn-react-explorer#readme",
+  "license": "MIT",
+  "private": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bugs": {
+    "url": "https://github.com/attorn/-attorn-react-explorer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/attorn/-attorn-react-explorer.git"
+  },
+  "files": [
+    "dist",
+    "example"
+  ],
+  "keywords": [
+    "electron",
+    "nodejs",
+    "storage",
+    "fs",
+    "electron-storage",
+    "attorn"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "react": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.35",
+    "typescript": "^4.4.4"
+  }
+}
