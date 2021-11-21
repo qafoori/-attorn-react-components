@@ -1,21 +1,28 @@
-import React, { FC } from "react"
+import React, { FC, useRef } from "react"
 import * as Lib from './lib';
 
 
 export const Explorer: FC<Lib.T.Explorer> = ({
-  height, maxHeight, maxWidth, minHeight, minWidth, width, ..._
+  maxWidth, minWidth, width, height, ..._
 }): JSX.Element => {
+  const explorer = useRef<HTMLDivElement>(null);
+  const { on } = Lib.H.useExplorer(explorer, { width });
 
   return (
     <Lib.S.Explorer
-      height={height}
       width={width}
-      maxHeight={maxHeight}
+      height={height}
       maxWidth={maxWidth}
-      minHeight={minHeight}
       minWidth={minWidth}
+      ref={explorer}
       {..._ as any}
     >
+      <span
+        className='resizeHandler'
+        id='some'
+        onMouseDown={on.mouseDown}
+        onDoubleClick={on.doubleClick}
+      />
       <div></div>
     </Lib.S.Explorer>
   )
