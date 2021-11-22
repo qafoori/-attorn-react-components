@@ -1,4 +1,4 @@
-import{ SVGAttributes } from "react"
+import { SVGAttributes } from "react"
 
 type SVGProps = SVGAttributes<SVGSVGElement> | any
 
@@ -12,9 +12,12 @@ export interface IconProps extends SVGProps {
 export type Icons =
   'white-back-logo'
   | 'chevron-down'
+  | 'chevron-right'
   | 'search'
   | 'sync'
   | 'folder'
+  | 'folder-open'
+  | 'folder-close'
   | 'code'
   | 'palette'
   | 'chart'
@@ -26,3 +29,22 @@ export type Icons =
   | 'server'
   | 'github'
   | 'download'
+  | 'collapse'
+  | 'add-file'
+  | 'add-folder'
+  | 'reload'
+  | 'method-post'
+  | 'method-delete'
+  | 'method-patch'
+  | 'method-get'
+  | 'method-put'
+  | 'method-options'
+  | 'method-head'
+  | 'method-copy'
+  | 'method-link'
+  | 'method-unlink'
+  | 'method-purge'
+  | 'method-lock'
+  | 'method-unlock'
+  | 'method-propfind'
+  | 'method-view'

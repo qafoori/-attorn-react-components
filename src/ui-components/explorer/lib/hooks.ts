@@ -1,12 +1,12 @@
 import { useCallback } from 'react'
 import * as Lib from '.';
 
+
 export const useExplorer = (
   explorerRef: React.RefObject<HTMLDivElement>,
   { width }: Pick<Lib.T.Explorer, 'width'>
 ) => {
   let calculatedOffset: number;
-
 
   const onMouseDown = (evt: Lib.T.ExplorerEvent) => {
     const { current: explorer } = explorerRef;
@@ -43,12 +43,23 @@ export const useExplorer = (
   }
 
 
+  const headerOptions: Lib.T.HeaderOption[] = [
+    { name: 'reload', onClick: () => { }, size: 13 },
+    { name: 'add-folder', onClick: () => { }, size: 15 },
+    { name: 'add-file', onClick: () => { }, size: 14 },
+    { name: 'collapse', onClick: () => { }, size: 13 },
+  ]
+
+
 
 
   return {
     on: {
       mouseDown: onMouseDown,
       doubleClick: onDoubleClick,
+    },
+    I: {
+      headerOptions
     }
   }
 }
