@@ -1,14 +1,19 @@
-import React, { FC, useRef } from "react"
+import React, { FC, useEffect, useRef, useState } from "react"
 import { Icon } from "../icon";
 import * as Lib from './lib';
 
 
 export const Explorer: FC<Lib.T.Explorer> = ({
-  maxWidth, minWidth, width, height, styling
+  maxWidth, minWidth, width, height, styling, data, id
   , ..._
 }): JSX.Element => {
   const explorer = useRef<HTMLDivElement>(null);
-  const { on, I } = Lib.H.useExplorer(explorer, { width });
+  const { on, I } = Lib.H.useExplorer(explorer, { width, id });
+  const [active, setActive] = useState<number | string | null>(null);
+
+  useEffect(() => console.log(active), [active])
+
+
 
   return (
     <Lib.S.Explorer
@@ -19,6 +24,7 @@ export const Explorer: FC<Lib.T.Explorer> = ({
       styling={styling}
       ref={explorer}
       {..._ as any}
+      id={id}
     >
       <span
         className='resizeHandler'
@@ -41,18 +47,14 @@ export const Explorer: FC<Lib.T.Explorer> = ({
         </div>
 
         <div className='body'>
-          <Lib.C.File 
-            name='some file name goes here'
-          />
-          <Lib.C.Folder 
-            name='some file name goes here'
-          />
-          <Lib.C.File 
-            name='some file name goes here'
-          />
-          <Lib.C.Folder 
-            name='some file name goes here'
-          />
+          {data.map((item, index) =>
+            <Lib.C.Item
+              key={index}
+              item={item}
+              active={active}
+              setActive={setActive}
+            />
+          )}
         </div>
 
       </div>

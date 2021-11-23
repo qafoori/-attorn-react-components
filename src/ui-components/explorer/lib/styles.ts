@@ -66,9 +66,17 @@ export const Explorer = styled.div<
       }
     }
 
-
     > .body {
+      overflow: auto;
+      overflow-x: hidden;
+      max-height: 100%;
+      padding: 0 10px;
 
+      &:hover {
+        .guide {
+          opacity: 1;
+        }
+      }
     }
   }
 `;
@@ -83,21 +91,47 @@ export const ExplorerItem = styled.div`
     align-items: center;
     justify-content: center;
     height: 26px;
-    padding: 4px 10px;
+    padding: 4px 0;
+    position: relative;
 
-    &:hover {
+    &:hover, &.true {
       background-color: var(--foreground);
+
+      &::after, &::before {
+        background-color: var(--foreground);
+      }
+    }
+
+    &::before, &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+    }
+
+    &::before {
+      left: -10px;
+    }
+
+    &::after {
+      right: -10px
     }
 
     > p {
       margin: 0;
       flex: 1;
-      padding: 0 0 0 8px;
+      padding: 0 0 0 4px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      margin: -3px 0 0 0;
+      margin: 4px 0 0 0;
       font-size: 11pt;
+      position: relative;
+
+      &::before {
+        content: '';
+      }
     }
 
     > span {
@@ -111,10 +145,27 @@ export const ExplorerItem = styled.div`
     }
   }
 
-
-
   > div.children {
     width: 100%;
-    padding: 0 0 0 42px;
+    display: grid;
+    position: relative;
+    display: none;
+
+    &.true {
+      display: grid;
+    }
+
+    > span.guide {
+      width: 1px;
+      background: #ffffff2e;
+      height: 100%;
+      position: absolute;
+      opacity: 0;
+      transition: all 150ms linear;
+
+      &.true {
+        opacity: 1;
+      }
+    }
   }
 `;

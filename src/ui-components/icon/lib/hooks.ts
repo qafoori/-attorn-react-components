@@ -11,9 +11,19 @@ export const useIcon = ({ size }: Pick<Lib.T.IconProps, 'size'>) => {
   }
 
 
+  const calculateAbbrMethodSize = () => {
+    const iconSize = size || 20;
+    return {
+      width: iconSize * 1.6,
+      height: iconSize
+    }
+  }
+
+
   return {
     on: {
-      calculateMethodSize
+      calculateMethodSize,
+      calculateAbbrMethodSize
     }
   }
 }
