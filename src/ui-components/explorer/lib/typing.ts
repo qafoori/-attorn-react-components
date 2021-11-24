@@ -1,4 +1,4 @@
-import { DetailedHTMLProps, Dispatch, HTMLAttributes, SetStateAction } from 'react';
+import { DetailedHTMLProps, Dispatch, DragEvent, HTMLAttributes, SetStateAction } from 'react';
 import { Icons } from '../../icon/lib/types';
 
 export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
@@ -8,6 +8,7 @@ export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElemen
   height?: string;
   data: Array<FileProps | FolderProps>;
   id: string;
+  tabIndent?: number;
   styling: {
     background?: string;
     optionHoverBackground?: string;
@@ -29,6 +30,13 @@ export type Methods =
   'post' | 'delete' | 'patch' | 'get' | 'put' | 'options' | 'head' | 'copy'
   | 'link' | 'unlink' | 'purge' | 'lock' | 'unlock' | 'propfind' | 'view';
 
+
+export interface DNDProps {
+  onDragStart?: (evt: DragEvent<HTMLDivElement>, name: string) => void
+  onDragEnd?: (evt: DragEvent<HTMLDivElement>) => void
+  onDragOver?: (evt: DragEvent<HTMLDivElement>) => void
+}
+
 export interface ExplorerItem {
   name: string;
   id: string | number;
@@ -36,18 +44,20 @@ export interface ExplorerItem {
   active?: boolean;
 }
 
-export interface FolderProps extends ExplorerItem {
+export interface FolderProps extends ExplorerItem, DNDProps {
   subItems: FolderProps[] | FileProps[];
+  collapsed?: boolean;
 }
 
-export interface FileProps extends ExplorerItem {
+export interface FileProps extends ExplorerItem, DNDProps {
   method: Methods;
 }
 
-export type ItemProps = {
+export interface ItemProps extends DNDProps {
   item: FolderProps | FileProps;
   active: number | string | null;
   setActive: Dispatch<SetStateAction<number | string | null>>
+  collapsed: boolean
 }
 
 

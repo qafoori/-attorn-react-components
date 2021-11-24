@@ -19,6 +19,8 @@ export const Explorer = styled.div<
   background-color: ${({ styling }) => styling.background || 'black'};
   position: relative;
   padding: 0 5px 0 0;
+
+
   
   .resizeHandler {
     position: absolute;
@@ -30,7 +32,7 @@ export const Explorer = styled.div<
     cursor: col-resize;
   }
 
-  > div {
+  > div.explorerContainer {
     width: calc(100% + 5px);
     height: 100%;
     background-color: transparent;
@@ -75,6 +77,12 @@ export const Explorer = styled.div<
       &:hover {
         .guide {
           opacity: 1;
+        }
+      }
+
+      > .file {
+        > .details {
+          padding: 0 0 0 15px;
         }
       }
     }
@@ -125,12 +133,12 @@ export const ExplorerItem = styled.div`
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      margin: 4px 0 0 0;
-      font-size: 11pt;
+      margin: 1px 0 0 0;
+      font-size: 10pt;
       position: relative;
 
-      &::before {
-        content: '';
+      &.fileName {
+        margin: 1px 0 0 3px;
       }
     }
 
@@ -141,6 +149,29 @@ export const ExplorerItem = styled.div`
 
       &.folder {
         margin: 0 4px 0 6px;
+      }
+    }
+
+    > span.border {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 25%;
+      z-index: 1;
+
+      &.top {
+        top: 0;
+      }
+
+      &.center {
+        height: 50%;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+      }
+
+      &.bottom {
+        bottom: 0;
       }
     }
   }
@@ -166,6 +197,21 @@ export const ExplorerItem = styled.div`
       &.true {
         opacity: 1;
       }
+    }
+  }
+
+  &.draggedNode {
+    > .details {
+      background-color: transparent;
+      &::after, &::before {
+        content: unset;
+      }
+      span {
+        display: none;
+      }
+    }
+    .children {
+      display: none;
     }
   }
 `;

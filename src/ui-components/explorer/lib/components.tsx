@@ -4,18 +4,23 @@ import { Icon } from '../../icon';
 
 
 
-export const Item: FC<Lib.T.ItemProps> = ({ item, active, setActive }) => {
+export const Item: FC<Lib.T.ItemProps> = ({
+  item, active, setActive, collapsed, children, ...otherProps
+}): JSX.Element => {
   let nestedItem: JSX.Element[] = [];
-
 
   if ("subItems" in item) {
     nestedItem = item.subItems.map((item: Lib.T.FolderProps | Lib.T.FileProps, i: number) => {
-      return <Item
-        key={i}
-        item={item}
-        active={active}
-        setActive={setActive}
-      />
+      return (
+        <Item
+          key={i}
+          item={item}
+          active={active}
+          setActive={setActive}
+          collapsed={collapsed}
+          {...otherProps}
+        />
+      )
     })
   }
 
@@ -27,6 +32,7 @@ export const Item: FC<Lib.T.ItemProps> = ({ item, active, setActive }) => {
         id={item.id}
         active={item.id == active}
         onClick={() => setActive(item.id)}
+        {...otherProps}
       />
     )
   }
@@ -38,6 +44,8 @@ export const Item: FC<Lib.T.ItemProps> = ({ item, active, setActive }) => {
         subItems={[]}
         active={item.id == active}
         onClick={() => setActive(item.id)}
+        collapsed={collapsed}
+        {...otherProps}
       >
         {nestedItem}
       </Folder>
@@ -47,9 +55,8 @@ export const Item: FC<Lib.T.ItemProps> = ({ item, active, setActive }) => {
 
 
 
-
 export const Folder: FC<Lib.T.FolderProps> = ({
-  name, children, active, onClick
+  name, children, active, onClick, collapsed, id, subItems, onDragStart, onDragEnd, onDragOver
 }): JSX.Element => {
   const [childrenVisibility, setChildrenVisibility] = useState<boolean>(false);
 
@@ -60,10 +67,20 @@ export const Folder: FC<Lib.T.FolderProps> = ({
     }
   }
 
+  useEffect(() => setChildrenVisibility(false), [collapsed])
+
   return (
     <>
-      <Lib.S.ExplorerItem>
+      <Lib.S.ExplorerItem
+        draggable={true}
+        onDragStart={evt => onDragStart!(evt, name)}
+        onDragEnd={onDragEnd}
+      >
         <div className={`details ${active}`} onClick={onClickHandler}>
+          <span onDragOver={onDragOver} className='border top' />
+          <span onDragOver={onDragOver} className='border center' />
+          <span onDragOver={onDragOver} className='border bottom' />
+
           <span className='chevron'>
             <Icon name={childrenVisibility ? 'chevron-down' : 'chevron-right'} color='var(--foreground_color)' size={10} />
           </span>
@@ -89,7 +106,7 @@ export const Folder: FC<Lib.T.FolderProps> = ({
 
 
 export const File: FC<Lib.T.FileProps> = ({
-  name, method, active, onClick
+  name, method, active, onClick, children, id, onDragStart, onDragEnd, onDragOver
 }): JSX.Element => {
   const onClickHandler = () => {
     if (onClick) {
@@ -99,13 +116,22 @@ export const File: FC<Lib.T.FileProps> = ({
 
   return (
     <>
-      <Lib.S.ExplorerItem>
+      <Lib.S.ExplorerItem
+        className='file'
+        draggable={true}
+        onDragStart={evt => onDragStart!(evt, name)}
+        onDragEnd={onDragEnd}
+      >
         <div className={`details ${active}`} onClick={onClickHandler}>
+          <span onDragOver={onDragOver} className='border top' />
+          <span onDragOver={onDragOver} className='border center' />
+          <span onDragOver={onDragOver} className='border bottom' />
+
           <span className='method'>
             <Icon name={`method-abbr-${method}`} size={12} />
           </span>
 
-          <p>{name}</p>
+          <p className='fileName'>{name}</p>
         </div>
       </Lib.S.ExplorerItem>
     </>

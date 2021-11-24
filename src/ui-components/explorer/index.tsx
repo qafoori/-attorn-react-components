@@ -11,8 +11,6 @@ export const Explorer: FC<Lib.T.Explorer> = ({
   const { on, I } = Lib.H.useExplorer(explorer, { width, id });
   const [active, setActive] = useState<number | string | null>(null);
 
-  useEffect(() => console.log(active), [active])
-
 
 
   return (
@@ -32,7 +30,7 @@ export const Explorer: FC<Lib.T.Explorer> = ({
         onMouseDown={on.mouseDown}
         onDoubleClick={on.doubleClick}
       />
-      <div>
+      <div className='explorerContainer'>
         <div className='header'>
           <p>something that goes here</p>
           {I.headerOptions.map((item, index) =>
@@ -53,6 +51,10 @@ export const Explorer: FC<Lib.T.Explorer> = ({
               item={item}
               active={active}
               setActive={setActive}
+              collapsed={I.collapsed}
+              onDragStart={on.dragStart}
+              onDragEnd={on.dragEnd}
+              onDragOver={on.dragOver}
             />
           )}
         </div>
