@@ -31,10 +31,14 @@ export type Methods =
   | 'link' | 'unlink' | 'purge' | 'lock' | 'unlock' | 'propfind' | 'view';
 
 
+export type Position = 'above' | 'into' | 'below'
+
 export interface DNDProps {
-  onDragStart?: (evt: DragEvent<HTMLDivElement>, name: string) => void
+  onDragStart?: (evt: DragEvent<HTMLDivElement>, name: string, id: number | string) => void
   onDragEnd?: (evt: DragEvent<HTMLDivElement>) => void
   onDragOver?: (evt: DragEvent<HTMLDivElement>) => void
+  onDragLeave?: (evt: DragEvent<HTMLSpanElement>) => void
+  onHelpersDragEnd?: (id: number | string, position: Position) => void
 }
 
 export interface ExplorerItem {
@@ -60,7 +64,10 @@ export interface ItemProps extends DNDProps {
   collapsed: boolean
 }
 
-
+export type OnDragEndInfo = {
+  position: Position
+  id: string | number
+}
 
 
 
@@ -245,67 +252,7 @@ export const apiCallerExplorerThings: Array<FileProps | FolderProps> = [
                               {
                                 name: 'folder_1_2_1_1_1_1_1_1',
                                 id: 28,
-                                subItems: [
-                                  {
-                                    name: 'folder_1_2_1_1_1_1_1',
-                                    id: 27,
-                                    subItems: [
-                                      {
-                                        name: 'folder_1_2_1_1_1_1_1_1',
-                                        id: 28,
-                                        subItems: [
-                                          {
-                                            name: 'folder_1_2_1_1_1_1_1',
-                                            id: 27,
-                                            subItems: [
-                                              {
-                                                name: 'folder_1_2_1_1_1_1_1_1',
-                                                id: 28,
-                                                subItems: [
-                                                  {
-                                                    name: 'folder_1_2_1_1_1_1_1',
-                                                    id: 27,
-                                                    subItems: [
-                                                      {
-                                                        name: 'folder_1_2_1_1_1_1_1_1',
-                                                        id: 28,
-                                                        subItems: [
-                                                          {
-                                                            name: 'folder_1_2_1_1_1_1_1',
-                                                            id: 27,
-                                                            subItems: [
-                                                              {
-                                                                name: 'folder_1_2_1_1_1_1_1_1',
-                                                                id: 28,
-                                                                subItems: [
-                                                                  {
-                                                                    name: 'folder_1_2_1_1_1_1_1',
-                                                                    id: 27,
-                                                                    subItems: [
-                                                                      {
-                                                                        name: 'folder_1_2_1_1_1_1_1_1',
-                                                                        id: 28,
-                                                                        subItems: threeChild2
-                                                                      },
-                                                                    ]
-                                                                  }
-                                                                ]
-                                                              },
-                                                            ]
-                                                          }
-                                                        ]
-                                                      },
-                                                    ]
-                                                  }
-                                                ]
-                                              },
-                                            ]
-                                          }
-                                        ]
-                                      },
-                                    ]
-                                  }
-                                ]
+                                subItems: []
                               },
                             ]
                           }
@@ -374,6 +321,17 @@ export const apiCallerExplorerThings: Array<FileProps | FolderProps> = [
         name: 'folder_6_1',
         id: 38,
         subItems: threeChild6
+      },
+    ]
+  },
+  {
+    name: 'folder_500',
+    id: 500,
+    subItems: [
+      {
+        name: 'file_501',
+        id: 501,
+        method: 'options'
       },
     ]
   },

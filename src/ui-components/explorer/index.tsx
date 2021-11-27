@@ -8,21 +8,23 @@ export const Explorer: FC<Lib.T.Explorer> = ({
   , ..._
 }): JSX.Element => {
   const explorer = useRef<HTMLDivElement>(null);
-  const { on, I } = Lib.H.useExplorer(explorer, { width, id });
+  const { on, I } = Lib.H.useExplorer(explorer, { width, id, data });
   const [active, setActive] = useState<number | string | null>(null);
 
 
 
   return (
     <Lib.S.Explorer
+      onKeyUp={on.undoOrRedo}
+      tabIndex={1}
       width={width}
       height={height}
       maxWidth={maxWidth}
       minWidth={minWidth}
       styling={styling}
       ref={explorer}
-      {..._ as any}
       id={id}
+      {..._ as any}
     >
       <span
         className='resizeHandler'
@@ -45,7 +47,7 @@ export const Explorer: FC<Lib.T.Explorer> = ({
         </div>
 
         <div className='body'>
-          {data.map((item, index) =>
+          {I.data.map((item, index) =>
             <Lib.C.Item
               key={index}
               item={item}
@@ -55,6 +57,8 @@ export const Explorer: FC<Lib.T.Explorer> = ({
               onDragStart={on.dragStart}
               onDragEnd={on.dragEnd}
               onDragOver={on.dragOver}
+              onDragLeave={on.dragLeave}
+              onHelpersDragEnd={on.helpersDragEnd}
             />
           )}
         </div>

@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { DetailedHTMLProps, DragEvent, FC, HTMLAttributes, useEffect, useState } from 'react';
 import * as Lib from '.';
 import { Icon } from '../../icon';
 
@@ -56,7 +56,8 @@ export const Item: FC<Lib.T.ItemProps> = ({
 
 
 export const Folder: FC<Lib.T.FolderProps> = ({
-  name, children, active, onClick, collapsed, id, subItems, onDragStart, onDragEnd, onDragOver
+  name, children, active, onClick, collapsed, id, subItems, onDragStart, onDragEnd, onDragOver,
+  onDragLeave, onHelpersDragEnd
 }): JSX.Element => {
   const [childrenVisibility, setChildrenVisibility] = useState<boolean>(false);
 
@@ -72,14 +73,19 @@ export const Folder: FC<Lib.T.FolderProps> = ({
   return (
     <>
       <Lib.S.ExplorerItem
+        className='folder'
         draggable={true}
-        onDragStart={evt => onDragStart!(evt, name)}
+        onDragStart={evt => onDragStart!(evt, name, id)}
         onDragEnd={onDragEnd}
       >
         <div className={`details ${active}`} onClick={onClickHandler}>
-          <span onDragOver={onDragOver} className='border top' />
-          <span onDragOver={onDragOver} className='border center' />
-          <span onDragOver={onDragOver} className='border bottom' />
+          <OnDragHelpers
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            withInto={true}
+            id={id}
+            onDragEnd={position => onHelpersDragEnd!(id, position)}
+          />
 
           <span className='chevron'>
             <Icon name={childrenVisibility ? 'chevron-down' : 'chevron-right'} color='var(--foreground_color)' size={10} />
@@ -89,7 +95,7 @@ export const Folder: FC<Lib.T.FolderProps> = ({
             <Icon name={childrenVisibility ? 'folder-open' : 'folder-close'} size={16} color='var(--foreground_color)' />
           </span>
 
-          <p>{name}</p>
+          <p>{name} ({id})</p>
         </div>
 
         <div className={`children ${childrenVisibility}`}>
@@ -106,7 +112,8 @@ export const Folder: FC<Lib.T.FolderProps> = ({
 
 
 export const File: FC<Lib.T.FileProps> = ({
-  name, method, active, onClick, children, id, onDragStart, onDragEnd, onDragOver
+  name, method, active, onClick, id, onDragStart, onDragEnd, onDragOver,
+  onDragLeave, onHelpersDragEnd
 }): JSX.Element => {
   const onClickHandler = () => {
     if (onClick) {
@@ -119,21 +126,76 @@ export const File: FC<Lib.T.FileProps> = ({
       <Lib.S.ExplorerItem
         className='file'
         draggable={true}
-        onDragStart={evt => onDragStart!(evt, name)}
+        onDragStart={evt => onDragStart!(evt, name, id)}
         onDragEnd={onDragEnd}
       >
         <div className={`details ${active}`} onClick={onClickHandler}>
-          <span onDragOver={onDragOver} className='border top' />
-          <span onDragOver={onDragOver} className='border center' />
-          <span onDragOver={onDragOver} className='border bottom' />
+          <OnDragHelpers
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            id={id}
+            onDragEnd={position => onHelpersDragEnd!(id, position)}
+          />
+
+          <span className='empty'>
+          </span>
 
           <span className='method'>
             <Icon name={`method-abbr-${method}`} size={12} />
           </span>
 
-          <p className='fileName'>{name}</p>
+          <p className='fileName'>{name} ({id})</p>
         </div>
       </Lib.S.ExplorerItem>
     </>
   )
 }
+
+
+
+
+
+export const OnDragHelpers: FC<
+  Pick<Lib.T.FileProps,
+    'onDragOver'
+    | 'onDragLeave'
+    | 'id'
+  > & {
+    onDragEnd: (position: Lib.T.Position) => void,
+    withInto?: boolean
+  }
+> = ({
+  onDragLeave, onDragOver, onDragEnd, id, withInto
+}) => {
+    const props: DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement> | { [name: string]: any } = {
+      'data-id': id,
+      onDragOver,
+    }
+
+    const onDragLeaveHandler = (evt: DragEvent<HTMLSpanElement>, position: Lib.T.Position) => {
+      onDragLeave!(evt)
+      onDragEnd(position)
+    }
+
+    return (
+      <>
+        <span
+          onDragLeave={evt => onDragLeaveHandler(evt, 'above')}
+          className='border top'
+          {...props}
+        />
+        {withInto &&
+          <span
+            onDragLeave={evt => onDragLeaveHandler(evt, 'into')}
+            className='border center'
+            {...props}
+          />
+        }
+        <span
+          onDragLeave={evt => onDragLeaveHandler(evt, 'below')}
+          className='border bottom'
+          {...props}
+        />
+      </>
+    )
+  }

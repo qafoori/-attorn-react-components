@@ -72,7 +72,8 @@ export const Explorer = styled.div<
       overflow: auto;
       overflow-x: hidden;
       max-height: 100%;
-      padding: 0 10px;
+      min-height: 100%;
+      padding: 3px 10px;
 
       &:hover {
         .guide {
@@ -80,11 +81,11 @@ export const Explorer = styled.div<
         }
       }
 
-      > .file {
+      /* > .file {
         > .details {
-          padding: 0 0 0 15px;
+          padding: 0 0 0 5px;
         }
-      }
+      } */
     }
   }
 `;
@@ -150,6 +151,12 @@ export const ExplorerItem = styled.div`
       &.folder {
         margin: 0 4px 0 6px;
       }
+
+      &.empty {
+        display: inline-block;
+        width: 15px;
+        height: 10px;
+      }
     }
 
     > span.border {
@@ -160,18 +167,28 @@ export const ExplorerItem = styled.div`
       z-index: 1;
 
       &.top {
-        top: 0;
+        top: -2px;
+        border-top: 3px solid transparent;
+
+        &.active {
+          border-top: 3px solid red;
+        }
       }
 
       &.center {
-        height: 50%;
+        height: calc(50% + 4px);
         top: 0;
         bottom: 0;
         margin: auto;
       }
 
       &.bottom {
-        bottom: 0;
+        bottom: -2px;
+        border-bottom: 3px solid transparent;
+        
+        &.active {
+          border-bottom: 3px solid red;
+        }
       }
     }
   }
@@ -200,18 +217,15 @@ export const ExplorerItem = styled.div`
     }
   }
 
-  &.draggedNode {
-    > .details {
-      background-color: transparent;
+  &.folder.active {
+    background-color: var(--foreground);
+
+    .details {
+      background-color: var(--foreground);
+
       &::after, &::before {
-        content: unset;
+        background-color: var(--foreground);
       }
-      span {
-        display: none;
-      }
-    }
-    .children {
-      display: none;
     }
   }
 `;
