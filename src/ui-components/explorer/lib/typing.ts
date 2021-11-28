@@ -1,4 +1,4 @@
-import { DetailedHTMLProps, Dispatch, DragEvent, HTMLAttributes, SetStateAction } from 'react';
+import { DetailedHTMLProps, Dispatch, DragEvent, FocusEvent, HTMLAttributes, KeyboardEvent, SetStateAction } from 'react';
 import { Icons } from '../../icon/lib/types';
 
 export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
@@ -9,6 +9,7 @@ export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElemen
   data: Array<FileProps | FolderProps>;
   id: string;
   tabIndent?: number;
+  onAddNew: (name: string, type: AddNewTypes) => number;
   styling: {
     background?: string;
     optionHoverBackground?: string;
@@ -46,6 +47,7 @@ export interface ExplorerItem {
   id: string | number;
   onClick?: () => void;
   active?: boolean;
+  disabledItems?: boolean;
 }
 
 export interface FolderProps extends ExplorerItem, DNDProps {
@@ -62,6 +64,7 @@ export interface ItemProps extends DNDProps {
   active: number | string | null;
   setActive: Dispatch<SetStateAction<number | string | null>>
   collapsed: boolean
+  disabledItems: boolean;
 }
 
 export type OnDragEndInfo = {
@@ -69,7 +72,13 @@ export type OnDragEndInfo = {
   id: string | number
 }
 
+export type AddNewTypes = 'file' | 'folder' | undefined;
 
+export type ItemAdderProps = {
+  type: AddNewTypes;
+  onBlur: (value: string) => void;
+  onKeyUp: (evt: KeyboardEvent<HTMLInputElement>) => void
+}
 
 
 // //////////////////////////////

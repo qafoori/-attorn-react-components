@@ -63,3 +63,4 @@ export type Icons =
   | 'method-abbr-unlock'
   | 'method-abbr-propfind'
   | 'method-abbr-view'
+  | 'method-abbr-empty'

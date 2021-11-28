@@ -9,23 +9,22 @@ const GHOST_CLASS_NAME = 'attornStudioDraggedItemGhostClassName'
 
 export const useExplorer = (
   explorerRef: React.RefObject<HTMLDivElement>,
-  { width, id, tabIndent = 15, data: explorerData }: Pick<
+  { width, id, tabIndent = 15, data: explorerData, onAddNew }: Pick<
     Lib.T.Explorer,
     'width'
     | 'id'
     | 'tabIndent'
     | 'data'
+    | 'onAddNew'
   >
 ) => {
+  const [addNew, setAddNew] = useState<Lib.T.AddNewTypes>(undefined)
   const [collapsed, setCollapsed] = useState<boolean>(true)
   const [onDragEndInfo, setOnDragEndInfo] = useState<Lib.T.OnDragEndInfo>()
   const [draggedId, setDraggedID] = useState<number | string>()
   const [data, setData] = useState<(Lib.T.FileProps | Lib.T.FolderProps)[]>(explorerData)
   const [stack, setStack] = useState<(Lib.T.FileProps | Lib.T.FolderProps)[][]>([explorerData])
   const [stackPointer, setStackPointer] = useState<number>(0)
-  const { on: onResize } = useResize(explorerRef, { width })
-  const { } = useIndents({ data, id, tabIndent })
-  const { I: headerI } = useHeader(collapsed, setCollapsed)
 
 
 
@@ -146,11 +145,12 @@ export const useExplorer = (
         newData = removedDataString.replace(elementToAppend, elementToMove + ',' + elementToAppend)
         break;
       case 'into':
-        const newElementToAppend = elementToAppend
-          .replace(elementToMove, '')
-          .replace(elementToMove + ',', '')
-          .replace(',' + elementToMove, '')
-
+        const newElementToAppend = diagnoseJsonString(
+          elementToAppend
+            .replace(elementToMove, '')
+            .replace(elementToMove + ',', '')
+            .replace(',' + elementToMove, '')
+        )
         const elementToAppendObj = <Lib.T.FolderProps>JSON.parse(newElementToAppend)
         elementToAppendObj.subItems.push(JSON.parse(elementToMove))
         if (!removedDataString.includes(newElementToAppend)) { return console.log('not included') }
@@ -189,6 +189,12 @@ export const useExplorer = (
 
 
 
+  const diagnoseJsonString = (jsonString: string) => {
+    return jsonString
+      .replace(/\[,{/g, '[{')
+      .replace(/},]/g, '}]')
+  }
+
 
 
   const changeItemPosition = () => {
@@ -214,6 +220,22 @@ export const useExplorer = (
     if (!newData) { return console.log('!newData') }
 
     addToStack(JSON.parse(newData))
+  }
+
+
+
+  const addNewItem = (name: string) => {
+    const id = onAddNew(name, addNew);
+
+    if (addNew === 'file') {
+      addToStack([...data, { id, name, method: 'post' }])
+    }
+    else if (addNew === 'folder') {
+      addToStack([...data, { id, name, subItems: [] }])
+    }
+    else { return console.log('not folder or file') }
+
+    setAddNew(undefined)
   }
 
 
@@ -247,21 +269,28 @@ export const useExplorer = (
   }
 
 
+  const { on: onResize } = useResize(explorerRef, { width })
+  const { } = useIndents({ data, id, tabIndent })
+  const { I: headerI, on: onHeader } = useHeader(collapsed, setCollapsed, setAddNew, addNewItem)
   useEffect(() => setData(stack[stackPointer]), [stackPointer])
   return {
     on: {
       ...onResize,
+      ...onHeader,
       dragStart: onDragStart,
       dragEnd: onDragEnd,
       dragOver: onDragOver,
       dragLeave: onDragLeave,
       helpersDragEnd: onHelpersDragEnd,
-      undoOrRedo: onUndoOrRedo
+      undoOrRedo: onUndoOrRedo,
     },
     I: {
       ...headerI,
       collapsed,
-      data
+      data,
+    },
+    states: {
+      addNew: { val: addNew, set: setAddNew }
     }
   }
 }
@@ -361,20 +390,48 @@ const useIndents = (
 
 const useHeader = (
   collapsed: boolean,
-  setCollapsed: Dispatch<SetStateAction<boolean>>
+  setCollapsed: Dispatch<SetStateAction<boolean>>,
+  setAddNew: Dispatch<SetStateAction<Lib.T.AddNewTypes>>,
+  addNewItem: (name: string) => void
 ) => {
   const collapseAll = () => setCollapsed(!collapsed)
 
   const headerOptions: Lib.T.HeaderOption[] = [
     { name: 'reload', onClick: () => { }, size: 13 },
-    { name: 'add-folder', onClick: () => { }, size: 15 },
-    { name: 'add-file', onClick: () => { }, size: 14 },
+    { name: 'add-folder', onClick: () => onAddNew('folder'), size: 15 },
+    { name: 'add-file', onClick: () => onAddNew('file'), size: 14 },
     { name: 'collapse', onClick: collapseAll, size: 13 },
   ]
+
+  const onAddNew = (type: Lib.T.AddNewTypes) => {
+    setAddNew(type)
+  }
+
+  const onInputBlur = (name: string) => {
+    if (name) {
+      return addNewItem(name)
+    }
+    return setAddNew(undefined)
+  }
+
+  const onInputKeyUp = (evt: KeyboardEvent<HTMLInputElement>) => {
+    if (evt.key === 'Enter') {
+      return addNewItem(evt.currentTarget.value)
+    }
+    if (evt.key === 'Escape') {
+      return setAddNew(undefined)
+    }
+  }
+
 
   return {
     I: {
       headerOptions,
+    },
+    on: {
+      addNew: onAddNew,
+      adderInputBlur: onInputBlur,
+      adderInputKeyUp: onInputKeyUp,
     }
   }
 }

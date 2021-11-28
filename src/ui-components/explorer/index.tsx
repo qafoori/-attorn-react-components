@@ -1,14 +1,14 @@
-import React, { FC, useEffect, useRef, useState } from "react"
+import React, { FC, useRef, useState } from "react"
 import { Icon } from "../icon";
 import * as Lib from './lib';
 
 
 export const Explorer: FC<Lib.T.Explorer> = ({
-  maxWidth, minWidth, width, height, styling, data, id
+  maxWidth, minWidth, width, height, styling, data, id, onAddNew
   , ..._
 }): JSX.Element => {
   const explorer = useRef<HTMLDivElement>(null);
-  const { on, I } = Lib.H.useExplorer(explorer, { width, id, data });
+  const { on, I, states } = Lib.H.useExplorer(explorer, { width, id, data, onAddNew });
   const [active, setActive] = useState<number | string | null>(null);
 
 
@@ -59,10 +59,18 @@ export const Explorer: FC<Lib.T.Explorer> = ({
               onDragOver={on.dragOver}
               onDragLeave={on.dragLeave}
               onHelpersDragEnd={on.helpersDragEnd}
+              disabledItems={states.addNew.val !== undefined}
             />
           )}
-        </div>
 
+          {states.addNew.val !== undefined &&
+            <Lib.C.ItemAdder
+              type={states.addNew.val}
+              onBlur={on.adderInputBlur}
+              onKeyUp={on.adderInputKeyUp}
+            />
+          }
+        </div>
       </div>
     </Lib.S.Explorer>
   )

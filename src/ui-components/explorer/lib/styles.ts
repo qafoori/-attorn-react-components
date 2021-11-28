@@ -80,12 +80,6 @@ export const Explorer = styled.div<
           opacity: 1;
         }
       }
-
-      /* > .file {
-        > .details {
-          padding: 0 0 0 5px;
-        }
-      } */
     }
   }
 `;
@@ -94,6 +88,11 @@ export const Explorer = styled.div<
 export const ExplorerItem = styled.div`
   width: 100%;
   cursor: pointer;
+
+  &.disabled {
+    opacity: .3;
+    pointer-events: none;
+  }
   
   > div.details {
     display: flex;
@@ -191,6 +190,23 @@ export const ExplorerItem = styled.div`
         }
       }
     }
+
+    > input {
+      margin: 0;
+      flex: 1;
+      padding: 0 0 0 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin: 1px 0 0 5px;
+      font-size: 10pt;
+      position: relative;
+      outline: none;
+      background: #0000003b;
+      border: none;
+      height: 23px;
+      font-style: italic;
+    }
   }
 
   > div.children {
@@ -201,6 +217,12 @@ export const ExplorerItem = styled.div`
 
     &.true {
       display: grid;
+    }
+
+    &.true-guide {
+      > span.guide {
+        opacity: 1;
+      }
     }
 
     > span.guide {

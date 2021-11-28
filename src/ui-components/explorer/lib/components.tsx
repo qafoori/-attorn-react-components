@@ -1,4 +1,4 @@
-import React, { DetailedHTMLProps, DragEvent, FC, HTMLAttributes, useEffect, useState } from 'react';
+import React, { DetailedHTMLProps, DragEvent, FC, HTMLAttributes, MouseEvent, useEffect, useState } from 'react';
 import * as Lib from '.';
 import { Icon } from '../../icon';
 
@@ -56,24 +56,33 @@ export const Item: FC<Lib.T.ItemProps> = ({
 
 
 export const Folder: FC<Lib.T.FolderProps> = ({
-  name, children, active, onClick, collapsed, id, subItems, onDragStart, onDragEnd, onDragOver,
-  onDragLeave, onHelpersDragEnd
+  name, children, active, onClick, collapsed, id, onDragStart, onDragEnd, onDragOver,
+  onDragLeave, onHelpersDragEnd, disabledItems
 }): JSX.Element => {
   const [childrenVisibility, setChildrenVisibility] = useState<boolean>(false);
 
-  const onClickHandler = () => {
+  const onClickHandler = (evt: MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
     setChildrenVisibility(!childrenVisibility)
     if (onClick) {
       onClick();
     }
+
+    const children = evt.currentTarget.nextElementSibling as HTMLDivElement | null;
+    if (!children || !children.classList.contains('children')) { return }
+
+    const allChildren = document.querySelectorAll('.true-guide') as NodeListOf<HTMLDivElement>;
+    allChildren.forEach(item => item.classList.remove('true-guide'))
+
+    setTimeout(() => children.classList.add('true-guide'), 10);
   }
+
 
   useEffect(() => setChildrenVisibility(false), [collapsed])
 
   return (
     <>
       <Lib.S.ExplorerItem
-        className='folder'
+        className={`folder ${disabledItems ? 'disabled' : ''}`}
         draggable={true}
         onDragStart={evt => onDragStart!(evt, name, id)}
         onDragEnd={onDragEnd}
@@ -113,7 +122,7 @@ export const Folder: FC<Lib.T.FolderProps> = ({
 
 export const File: FC<Lib.T.FileProps> = ({
   name, method, active, onClick, id, onDragStart, onDragEnd, onDragOver,
-  onDragLeave, onHelpersDragEnd
+  onDragLeave, onHelpersDragEnd, disabledItems
 }): JSX.Element => {
   const onClickHandler = () => {
     if (onClick) {
@@ -124,7 +133,7 @@ export const File: FC<Lib.T.FileProps> = ({
   return (
     <>
       <Lib.S.ExplorerItem
-        className='file'
+        className={`file ${disabledItems ? 'disabled' : ''}`}
         draggable={true}
         onDragStart={evt => onDragStart!(evt, name, id)}
         onDragEnd={onDragEnd}
@@ -199,3 +208,44 @@ export const OnDragHelpers: FC<
       </>
     )
   }
+
+
+
+export const ItemAdder: FC<Lib.T.ItemAdderProps> = ({
+  type, onBlur, onKeyUp
+}) => {
+
+  return <>
+    <Lib.S.ExplorerItem className='file'>
+      <div className='details'>
+        {type === 'file'
+          ?
+          <>
+            <span className='empty'>
+            </span>
+            <span className='method'>
+              <Icon name='method-abbr-post' size={12} />
+            </span>
+          </>
+          :
+          <>
+            <span className='chevron'>
+              <Icon name='chevron-right' color='var(--foreground_color)' size={10} />
+            </span>
+
+            <span className='folder'>
+              <Icon name='folder-close' size={16} color='var(--foreground_color)' />
+            </span>
+          </>
+        }
+        <input
+          placeholder='Type the name here...'
+          className='itemAdderInput'
+          autoFocus={true}
+          onBlur={evt => onBlur(evt.currentTarget.value)}
+          onKeyUp={onKeyUp}
+        />
+      </div>
+    </Lib.S.ExplorerItem>
+  </>
+}
