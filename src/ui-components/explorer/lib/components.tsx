@@ -57,15 +57,13 @@ export const Item: FC<Lib.T.ItemProps> = ({
 
 export const Folder: FC<Lib.T.FolderProps> = ({
   name, children, active, onClick, collapsed, id, onDragStart, onDragEnd, onDragOver,
-  onDragLeave, onHelpersDragEnd, disabledItems
+  onDragLeave, onHelpersDragEnd, disabledItems, onBlur, onKeyUp, itemIdToAppendNew,
+  addNewType
 }): JSX.Element => {
   const [childrenVisibility, setChildrenVisibility] = useState<boolean>(false);
 
   const onClickHandler = (evt: MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
     setChildrenVisibility(!childrenVisibility)
-    if (onClick) {
-      onClick();
-    }
 
     const children = evt.currentTarget.nextElementSibling as HTMLDivElement | null;
     if (!children || !children.classList.contains('children')) { return }
@@ -74,8 +72,12 @@ export const Folder: FC<Lib.T.FolderProps> = ({
     allChildren.forEach(item => item.classList.remove('true-guide'))
 
     setTimeout(() => children.classList.add('true-guide'), 10);
-  }
+    itemIdToAppendNew!.set(id)
 
+    if (onClick) {
+      onClick();
+    }
+  }
 
   useEffect(() => setChildrenVisibility(false), [collapsed])
 
@@ -86,6 +88,7 @@ export const Folder: FC<Lib.T.FolderProps> = ({
         draggable={true}
         onDragStart={evt => onDragStart!(evt, name, id)}
         onDragEnd={onDragEnd}
+        data-id={id}
       >
         <div className={`details ${active}`} onClick={onClickHandler}>
           <OnDragHelpers
@@ -109,9 +112,17 @@ export const Folder: FC<Lib.T.FolderProps> = ({
 
         <div className={`children ${childrenVisibility}`}>
           <span className={`guide ${active}`} />
+
           {children &&
             children
           }
+
+          <Lib.C.ItemAdder
+            type={addNewType}
+            onBlur={onBlur}
+            onKeyUp={onKeyUp}
+            visibility={itemIdToAppendNew!.val == id && addNewType !== undefined}
+          />
         </div>
       </Lib.S.ExplorerItem>
     </>
@@ -122,9 +133,17 @@ export const Folder: FC<Lib.T.FolderProps> = ({
 
 export const File: FC<Lib.T.FileProps> = ({
   name, method, active, onClick, id, onDragStart, onDragEnd, onDragOver,
-  onDragLeave, onHelpersDragEnd, disabledItems
+  onDragLeave, onHelpersDragEnd, disabledItems, itemIdToAppendNew
 }): JSX.Element => {
-  const onClickHandler = () => {
+  const onClickHandler = (evt: React.MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
+    const parent = evt.currentTarget.parentNode?.parentNode?.parentNode as HTMLDivElement | null;
+    if (parent && parent.classList.contains('folder')) {
+      itemIdToAppendNew?.set(parent.getAttribute('data-id')!)
+    }
+    else {
+      itemIdToAppendNew?.set(null)
+    }
+
     if (onClick) {
       onClick();
     }
@@ -138,7 +157,7 @@ export const File: FC<Lib.T.FileProps> = ({
         onDragStart={evt => onDragStart!(evt, name, id)}
         onDragEnd={onDragEnd}
       >
-        <div className={`details ${active}`} onClick={onClickHandler}>
+        <div className={`details ${active}`} onClick={evt => onClickHandler(evt)}>
           <OnDragHelpers
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
@@ -212,11 +231,11 @@ export const OnDragHelpers: FC<
 
 
 export const ItemAdder: FC<Lib.T.ItemAdderProps> = ({
-  type, onBlur, onKeyUp
+  type, onBlur, onKeyUp, visibility
 }) => {
 
   return <>
-    <Lib.S.ExplorerItem className='file'>
+    <Lib.S.ExplorerItem className={`file item-adder ${visibility ? 'enabled-item-adder' : ''}`}>
       <div className='details'>
         {type === 'file'
           ?
@@ -242,7 +261,7 @@ export const ItemAdder: FC<Lib.T.ItemAdderProps> = ({
           placeholder='Type the name here...'
           className='itemAdderInput'
           autoFocus={true}
-          onBlur={evt => onBlur(evt.currentTarget.value)}
+          onBlur={onBlur}
           onKeyUp={onKeyUp}
         />
       </div>

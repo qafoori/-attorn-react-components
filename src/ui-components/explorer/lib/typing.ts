@@ -50,21 +50,31 @@ export interface ExplorerItem {
   disabledItems?: boolean;
 }
 
-export interface FolderProps extends ExplorerItem, DNDProps {
+export type ItemIdToAppendNew = {
+  val: string | number | null;
+  set: Dispatch<SetStateAction<string | number | null>>
+}
+
+export interface FolderProps extends ExplorerItem, DNDProps, Omit<ItemAdderProps, 'type'> {
   subItems: FolderProps[] | FileProps[];
   collapsed?: boolean;
+  itemIdToAppendNew?: ItemIdToAppendNew
+  addNewType?: AddNewTypes
 }
 
 export interface FileProps extends ExplorerItem, DNDProps {
   method: Methods;
+  itemIdToAppendNew?: ItemIdToAppendNew
 }
 
-export interface ItemProps extends DNDProps {
+export interface ItemProps extends DNDProps, Omit<ItemAdderProps, 'type'> {
   item: FolderProps | FileProps;
   active: number | string | null;
   setActive: Dispatch<SetStateAction<number | string | null>>
   collapsed: boolean
   disabledItems: boolean;
+  itemIdToAppendNew: ItemIdToAppendNew
+  addNewType: AddNewTypes
 }
 
 export type OnDragEndInfo = {
@@ -74,10 +84,11 @@ export type OnDragEndInfo = {
 
 export type AddNewTypes = 'file' | 'folder' | undefined;
 
-export type ItemAdderProps = {
-  type: AddNewTypes;
-  onBlur: (value: string) => void;
-  onKeyUp: (evt: KeyboardEvent<HTMLInputElement>) => void
+export interface ItemAdderProps {
+  type?: AddNewTypes;
+  onBlur?: (evt: FocusEvent<HTMLInputElement, Element>) => void;
+  onKeyUp?: (evt: KeyboardEvent<HTMLInputElement>) => void
+  visibility?: boolean
 }
 
 

@@ -1,4 +1,4 @@
-import { Dispatch, DragEvent, KeyboardEvent, SetStateAction, useCallback, useEffect, useState } from 'react'
+import { Dispatch, DragEvent, FocusEvent, KeyboardEvent, SetStateAction, useCallback, useEffect, useState } from 'react'
 import * as Lib from '.';
 // @ts-ignore
 import { findNested } from '../../../helpers'
@@ -25,6 +25,7 @@ export const useExplorer = (
   const [data, setData] = useState<(Lib.T.FileProps | Lib.T.FolderProps)[]>(explorerData)
   const [stack, setStack] = useState<(Lib.T.FileProps | Lib.T.FolderProps)[][]>([explorerData])
   const [stackPointer, setStackPointer] = useState<number>(0)
+  const [folderIdToAppendNew, setFolderIdToAppendNew] = useState<string | number | null>(null)
 
 
 
@@ -134,58 +135,6 @@ export const useExplorer = (
 
 
 
-  const appendNewData = (removedDataString: string, elementToAppend: string, elementToMove: string) => {
-    if (!onDragEndInfo) { return console.log('!onDragEndInfo') }
-    const { position } = onDragEndInfo;
-
-    let newData: string | undefined = undefined;
-
-    switch (position) {
-      case 'above':
-        newData = removedDataString.replace(elementToAppend, elementToMove + ',' + elementToAppend)
-        break;
-      case 'into':
-        const newElementToAppend = diagnoseJsonString(
-          elementToAppend
-            .replace(elementToMove, '')
-            .replace(elementToMove + ',', '')
-            .replace(',' + elementToMove, '')
-        )
-        const elementToAppendObj = <Lib.T.FolderProps>JSON.parse(newElementToAppend)
-        elementToAppendObj.subItems.push(JSON.parse(elementToMove))
-        if (!removedDataString.includes(newElementToAppend)) { return console.log('not included') }
-        newData = removedDataString.replace(newElementToAppend, JSON.stringify(elementToAppendObj));
-        break;
-      case 'below':
-        newData = removedDataString.replace(elementToAppend, elementToAppend + ',' + elementToMove)
-        break;
-      default:
-        console.log('default')
-    }
-
-    return newData
-  }
-
-
-
-
-
-  const moveElementById = (elementToMove: object, elementToAppend: object) => {
-    if (!onDragEndInfo || !onDragEndInfo) { return console.log('!onDragEndInfo || !onDragEndInfo') }
-
-    const dataString = JSON.stringify(data)
-    const objString = JSON.stringify(elementToMove)
-
-    const removedDataString = removePrevData(objString, dataString);
-    if (!removedDataString) { return console.log('!removedDataString') }
-
-    const appendedDataString = appendNewData(removedDataString, JSON.stringify(elementToAppend), objString)
-    if (!appendedDataString) { return console.log('!appendedDataString') }
-
-    // console.log(appendedDataString)
-
-    return appendedDataString
-  }
 
 
 
@@ -224,16 +173,94 @@ export const useExplorer = (
 
 
 
+  const moveElementById = (elementToMove: object, elementToAppend: object, enabledRemove = true) => {
+    if (!onDragEndInfo) { return console.log('!onDragEndInfo') }
+
+    const dataString = JSON.stringify(data)
+    const objString = JSON.stringify(elementToMove)
+
+    const removedDataString = removePrevData(objString, dataString);
+    if (!removedDataString) { return console.log('!removedDataString') }
+
+    const appendedDataString = appendNewData(removedDataString, JSON.stringify(elementToAppend), objString)
+    if (!appendedDataString) { return console.log('!appendedDataString') }
+
+    return appendedDataString
+  }
+
+
+
+
+
+
+  const appendNewData = (
+    removedDataString: string,
+    elementToAppend: string,
+    elementToMove: string,
+    customPosition?: Lib.T.Position
+  ) => {
+    const position = onDragEndInfo?.position || customPosition;
+
+    if (!position) { return console.log('!position') }
+
+    let newData: string | undefined = undefined;
+
+    switch (position) {
+      case 'above':
+        newData = removedDataString.replace(elementToAppend, elementToMove + ',' + elementToAppend)
+        break;
+      case 'into':
+        const newElementToAppend = diagnoseJsonString(
+          elementToAppend
+            .replace(elementToMove, '')
+            .replace(elementToMove + ',', '')
+            .replace(',' + elementToMove, '')
+        )
+        const elementToAppendObj = <Lib.T.FolderProps>JSON.parse(newElementToAppend)
+        elementToAppendObj.subItems.push(JSON.parse(elementToMove))
+        if (!removedDataString.includes(newElementToAppend)) { return console.log('not included') }
+        newData = removedDataString.replace(newElementToAppend, JSON.stringify(elementToAppendObj));
+        break;
+      case 'below':
+        newData = removedDataString.replace(elementToAppend, elementToAppend + ',' + elementToMove)
+        break;
+      default:
+        console.log('default')
+    }
+
+    return newData
+  }
+
+
+
   const addNewItem = (name: string) => {
     const id = onAddNew(name, addNew);
 
-    if (addNew === 'file') {
-      addToStack([...data, { id, name, method: 'post' }])
+    if (folderIdToAppendNew) {
+      const elementToAppend = findNested(data, 'id', folderIdToAppendNew);
+      const elementToMove = addNew === 'file'
+        ? <Lib.T.FileProps>{ id, name, method: 'post' }
+        : <Lib.T.FolderProps>{ id, name, subItems: [] }
+
+      const newData = appendNewData(
+        JSON.stringify(data),
+        JSON.stringify(elementToAppend),
+        JSON.stringify(elementToMove),
+        'into'
+      )
+
+      if (!newData) { return console.log('!newDate') }
+
+      addToStack(JSON.parse(newData))
     }
-    else if (addNew === 'folder') {
-      addToStack([...data, { id, name, subItems: [] }])
+    else {
+      if (addNew === 'file') {
+        addToStack([...data, { id, name, method: 'post' }])
+      }
+      else if (addNew === 'folder') {
+        addToStack([...data, { id, name, subItems: [] }])
+      }
     }
-    else { return console.log('not folder or file') }
 
     setAddNew(undefined)
   }
@@ -269,6 +296,15 @@ export const useExplorer = (
   }
 
 
+  const onBodyClick = (evt: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const { classList } = <HTMLDivElement>evt.target
+
+    if (classList.contains('body')) {
+      setFolderIdToAppendNew(null)
+    }
+  }
+
+
   const { on: onResize } = useResize(explorerRef, { width })
   const { } = useIndents({ data, id, tabIndent })
   const { I: headerI, on: onHeader } = useHeader(collapsed, setCollapsed, setAddNew, addNewItem)
@@ -283,6 +319,7 @@ export const useExplorer = (
       dragLeave: onDragLeave,
       helpersDragEnd: onHelpersDragEnd,
       undoOrRedo: onUndoOrRedo,
+      bodyClick: onBodyClick
     },
     I: {
       ...headerI,
@@ -290,7 +327,8 @@ export const useExplorer = (
       data,
     },
     states: {
-      addNew: { val: addNew, set: setAddNew }
+      addNew: { val: addNew, set: setAddNew },
+      folderIdToAppendNew: { val: folderIdToAppendNew, set: setFolderIdToAppendNew }
     }
   }
 }
@@ -403,16 +441,23 @@ const useHeader = (
     { name: 'collapse', onClick: collapseAll, size: 13 },
   ]
 
+
   const onAddNew = (type: Lib.T.AddNewTypes) => {
     setAddNew(type)
+
+    setTimeout(() => {
+      const input = <HTMLInputElement>document.querySelectorAll('.enabled-item-adder input')[0]
+      if (!input) { return }
+      input.focus()
+    }, 10);
   }
 
-  const onInputBlur = (name: string) => {
-    if (name) {
-      return addNewItem(name)
-    }
+
+  const onInputBlur = (_evt: FocusEvent<HTMLInputElement, Element>) => {
     return setAddNew(undefined)
   }
+
+
 
   const onInputKeyUp = (evt: KeyboardEvent<HTMLInputElement>) => {
     if (evt.key === 'Enter') {

@@ -46,7 +46,7 @@ export const Explorer: FC<Lib.T.Explorer> = ({
           )}
         </div>
 
-        <div className='body'>
+        <div className='body' onClick={on.bodyClick}>
           {I.data.map((item, index) =>
             <Lib.C.Item
               key={index}
@@ -60,16 +60,19 @@ export const Explorer: FC<Lib.T.Explorer> = ({
               onDragLeave={on.dragLeave}
               onHelpersDragEnd={on.helpersDragEnd}
               disabledItems={states.addNew.val !== undefined}
-            />
-          )}
-
-          {states.addNew.val !== undefined &&
-            <Lib.C.ItemAdder
-              type={states.addNew.val}
+              itemIdToAppendNew={states.folderIdToAppendNew}
+              addNewType={states.addNew.val}
               onBlur={on.adderInputBlur}
               onKeyUp={on.adderInputKeyUp}
             />
-          }
+          )}
+
+          <Lib.C.ItemAdder
+            type={states.addNew.val}
+            onBlur={on.adderInputBlur}
+            onKeyUp={on.adderInputKeyUp}
+            visibility={states.addNew.val !== undefined && states.folderIdToAppendNew.val === null}
+          />
         </div>
       </div>
     </Lib.S.Explorer>

@@ -89,9 +89,17 @@ export const ExplorerItem = styled.div`
   width: 100%;
   cursor: pointer;
 
-  &.disabled {
+  /* &.disabled {
     opacity: .3;
     pointer-events: none;
+  } */
+
+  &.item-adder {
+    display: none;
+
+    &.enabled-item-adder {
+      display: initial;
+    }
   }
   
   > div.details {
