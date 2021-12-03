@@ -58,9 +58,10 @@ export const Item: FC<Lib.T.ItemProps> = ({
 export const Folder: FC<Lib.T.FolderProps> = ({
   name, children, active, onClick, collapsed, id, onDragStart, onDragEnd, onDragOver,
   onDragLeave, onHelpersDragEnd, disabledItems, onBlur, onKeyUp, itemIdToAppendNew,
-  addNewType
+  addNewType, onRightClick, itemIdToRename, onRename
 }): JSX.Element => {
   const [childrenVisibility, setChildrenVisibility] = useState<boolean>(false);
+  const [newName, setNewName] = useState<string>(name);
 
   const onClickHandler = (evt: MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
     setChildrenVisibility(!childrenVisibility)
@@ -79,6 +80,16 @@ export const Folder: FC<Lib.T.FolderProps> = ({
     }
   }
 
+  const onRightClickHandler = (evt: React.MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
+    if (!childrenVisibility) {
+      onClickHandler(evt)
+    }
+    itemIdToAppendNew!.set(id)
+    if (onRightClick) {
+      onRightClick(id, 'folder', evt)
+    }
+  }
+
   useEffect(() => setChildrenVisibility(false), [collapsed])
 
   return (
@@ -89,15 +100,18 @@ export const Folder: FC<Lib.T.FolderProps> = ({
         onDragStart={evt => onDragStart!(evt, name, id)}
         onDragEnd={onDragEnd}
         data-id={id}
+        onContextMenu={onRightClickHandler}
       >
         <div className={`details ${active}`} onClick={onClickHandler}>
-          <OnDragHelpers
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            withInto={true}
-            id={id}
-            onDragEnd={position => onHelpersDragEnd!(id, position)}
-          />
+          {itemIdToRename?.val != id &&
+            <OnDragHelpers
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              withInto={true}
+              id={id}
+              onDragEnd={position => onHelpersDragEnd!(id, position)}
+            />
+          }
 
           <span className='chevron'>
             <Icon name={childrenVisibility ? 'chevron-down' : 'chevron-right'} color='var(--foreground_color)' size={10} />
@@ -107,7 +121,18 @@ export const Folder: FC<Lib.T.FolderProps> = ({
             <Icon name={childrenVisibility ? 'folder-open' : 'folder-close'} size={16} color='var(--foreground_color)' />
           </span>
 
-          <p>{name} ({id})</p>
+
+          {itemIdToRename?.val == id
+            ? <input
+              type="text"
+              value={newName}
+              onInput={evt => setNewName(evt.currentTarget.value)}
+              onBlur={evt => onRename?.blur(evt, name, setNewName)}
+              onKeyUp={evt => onRename?.keyUp(evt, name, setNewName)}
+              autoFocus={true}
+            />
+            : <p>{name} ({id})</p>
+          }
         </div>
 
         <div className={`children ${childrenVisibility}`}>
@@ -132,9 +157,11 @@ export const Folder: FC<Lib.T.FolderProps> = ({
 
 
 export const File: FC<Lib.T.FileProps> = ({
-  name, method, active, onClick, id, onDragStart, onDragEnd, onDragOver,
-  onDragLeave, onHelpersDragEnd, disabledItems, itemIdToAppendNew
+  name, method, active, onClick, id, onDragStart, onDragEnd, onDragOver, itemIdToRename,
+  onDragLeave, onHelpersDragEnd, disabledItems, itemIdToAppendNew, onRightClick, onRename
 }): JSX.Element => {
+  const [newName, setNewName] = useState<string>(name);
+
   const onClickHandler = (evt: React.MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
     const parent = evt.currentTarget.parentNode?.parentNode?.parentNode as HTMLDivElement | null;
     if (parent && parent.classList.contains('folder')) {
@@ -149,6 +176,13 @@ export const File: FC<Lib.T.FileProps> = ({
     }
   }
 
+
+  const onRightClickHandler = (evt: React.MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
+    if (onRightClick) {
+      onRightClick(id, 'file', evt)
+    }
+  }
+
   return (
     <>
       <Lib.S.ExplorerItem
@@ -156,14 +190,17 @@ export const File: FC<Lib.T.FileProps> = ({
         draggable={true}
         onDragStart={evt => onDragStart!(evt, name, id)}
         onDragEnd={onDragEnd}
+        onContextMenu={onRightClickHandler}
       >
         <div className={`details ${active}`} onClick={evt => onClickHandler(evt)}>
-          <OnDragHelpers
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            id={id}
-            onDragEnd={position => onHelpersDragEnd!(id, position)}
-          />
+          {itemIdToRename?.val != id &&
+            <OnDragHelpers
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              id={id}
+              onDragEnd={position => onHelpersDragEnd!(id, position)}
+            />
+          }
 
           <span className='empty'>
           </span>
@@ -172,7 +209,17 @@ export const File: FC<Lib.T.FileProps> = ({
             <Icon name={`method-abbr-${method}`} size={12} />
           </span>
 
-          <p className='fileName'>{name} ({id})</p>
+          {itemIdToRename?.val == id
+            ? <input
+              type="text"
+              value={newName}
+              onInput={evt => setNewName(evt.currentTarget.value)}
+              onBlur={evt => onRename?.blur(evt, name, setNewName)}
+              onKeyUp={evt => onRename?.keyUp(evt, name, setNewName)}
+              autoFocus={true}
+            />
+            : <p className='fileName'>{name} ({id})</p>
+          }
         </div>
       </Lib.S.ExplorerItem>
     </>

@@ -1,21 +1,21 @@
-import React, { FC, useRef, useState } from "react"
+import React, { FC, useRef } from "react"
 import { Icon } from "../icon";
 import * as Lib from './lib';
 
 
 export const Explorer: FC<Lib.T.Explorer> = ({
-  maxWidth, minWidth, width, height, styling, data, id, onAddNew
+  maxWidth, minWidth, width, height, styling, data, id, onAddNew,
+  onRightClick, ContextMenu, contextHandlerState, onErrors
   , ..._
 }): JSX.Element => {
   const explorer = useRef<HTMLDivElement>(null);
-  const { on, I, states } = Lib.H.useExplorer(explorer, { width, id, data, onAddNew });
-  const [active, setActive] = useState<number | string | null>(null);
-
-
+  const { on, I, states } = Lib.H.useExplorer(explorer, {
+    width, id, data, onAddNew, onRightClick, contextHandlerState, onErrors
+  });
 
   return (
     <Lib.S.Explorer
-      onKeyUp={on.undoOrRedo}
+      onKeyUp={on.shortcutHandler}
       tabIndex={1}
       width={width}
       height={height}
@@ -23,6 +23,7 @@ export const Explorer: FC<Lib.T.Explorer> = ({
       minWidth={minWidth}
       styling={styling}
       ref={explorer}
+      onContextMenu={evt => on.rightClickHandler(evt, '', 'whiteArea')}
       id={id}
       {..._ as any}
     >
@@ -51,8 +52,8 @@ export const Explorer: FC<Lib.T.Explorer> = ({
             <Lib.C.Item
               key={index}
               item={item}
-              active={active}
-              setActive={setActive}
+              active={states.active.val}
+              setActive={states.active.set}
               collapsed={I.collapsed}
               onDragStart={on.dragStart}
               onDragEnd={on.dragEnd}
@@ -64,6 +65,9 @@ export const Explorer: FC<Lib.T.Explorer> = ({
               addNewType={states.addNew.val}
               onBlur={on.adderInputBlur}
               onKeyUp={on.adderInputKeyUp}
+              onRightClick={(id, type, evt) => on.rightClickHandler(evt, id, type)}
+              itemIdToRename={states.itemIdToRename}
+              onRename={on.rename}
             />
           )}
 

@@ -9,7 +9,11 @@ export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElemen
   data: Array<FileProps | FolderProps>;
   id: string;
   tabIndent?: number;
-  onAddNew: (name: string, type: AddNewTypes) => number;
+  onAddNew: (name: string, type: AddNewTypes) => number | string;
+  onRightClick?: (id: number | string, type: OnContextMenuPayloadTypes, evt: OnContextMenuEvent) => void;
+  ContextMenu?: (method: ContextMenuMethods) => void;
+  contextHandlerState?: ContextMenuHandlerState
+  onErrors?: (error: string) => void;
   styling: {
     background?: string;
     optionHoverBackground?: string;
@@ -18,6 +22,15 @@ export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElemen
     itemHover?: string;
   }
 }
+
+export type OnContextMenuEvent = React.MouseEvent<HTMLDivElement, MouseEvent> | React.MouseEvent<HTMLDivElement, globalThis.MouseEvent>
+
+export type ContextMenuMethods = 'new-file' | 'new-folder' | 'delete'
+  | 'copy' | 'cut' | 'paste' | 'undo' | 'redo' | 'rename';
+
+
+export type OnContextMenuPayloadTypes = 'file' | 'folder' | 'whiteArea'
+
 
 export type ExplorerEvent = React.MouseEvent<HTMLSpanElement, MouseEvent>;
 
@@ -55,19 +68,25 @@ export type ItemIdToAppendNew = {
   set: Dispatch<SetStateAction<string | number | null>>
 }
 
-export interface FolderProps extends ExplorerItem, DNDProps, Omit<ItemAdderProps, 'type'> {
+export interface FolderProps extends
+  ExplorerItem, DNDProps, Omit<ItemAdderProps, 'type'>,
+  Pick<Explorer, 'onRightClick'>,
+  Pick<ItemProps, 'itemIdToRename' | 'onRename'> {
   subItems: FolderProps[] | FileProps[];
   collapsed?: boolean;
   itemIdToAppendNew?: ItemIdToAppendNew
   addNewType?: AddNewTypes
 }
 
-export interface FileProps extends ExplorerItem, DNDProps {
+export interface FileProps extends ExplorerItem, DNDProps,
+  Pick<Explorer, 'onRightClick'>,
+  Pick<ItemProps, 'itemIdToRename' | 'onRename'> {
   method: Methods;
   itemIdToAppendNew?: ItemIdToAppendNew
 }
 
-export interface ItemProps extends DNDProps, Omit<ItemAdderProps, 'type'> {
+export interface ItemProps extends DNDProps, Omit<ItemAdderProps, 'type'>,
+  Pick<Explorer, 'onRightClick'> {
   item: FolderProps | FileProps;
   active: number | string | null;
   setActive: Dispatch<SetStateAction<number | string | null>>
@@ -75,7 +94,14 @@ export interface ItemProps extends DNDProps, Omit<ItemAdderProps, 'type'> {
   disabledItems: boolean;
   itemIdToAppendNew: ItemIdToAppendNew
   addNewType: AddNewTypes
+  itemIdToRename?: { val: string | number | null, set: Dispatch<SetStateAction<string | number | null>> }
+  onRename?: {
+    blur: OnRenameType<React.FocusEvent<HTMLInputElement, Element>>;
+    keyUp: OnRenameType<React.KeyboardEvent<HTMLInputElement>>;
+  }
 }
+
+export type OnRenameType<T> = (evt: T, prevName: string, setDefault: Dispatch<React.SetStateAction<string>>) => void;
 
 export type OnDragEndInfo = {
   position: Position
@@ -91,6 +117,27 @@ export interface ItemAdderProps {
   visibility?: boolean
 }
 
+
+export type ContextMenuHandlerState = {
+  type: ContextMenuMethods;
+  id: number | string;
+} | null;
+
+
+export type ToCopyOrCutTypes = 'copy' | 'cut';
+
+
+export type ToCopyOrCut = {
+  item: string;
+  action: ToCopyOrCutTypes
+} | null
+
+
+export type ErrorThrowing = {
+  message: string;
+  fn: string;
+  [name: string]: any;
+}
 
 // //////////////////////////////
 const threeChild1: FileProps[] = [

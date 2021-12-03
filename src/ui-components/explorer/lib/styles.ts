@@ -30,6 +30,7 @@ export const Explorer = styled.div<
     width: 10px;
     background: transparent;
     cursor: col-resize;
+    z-index: 1;
   }
 
   > div.explorerContainer {
