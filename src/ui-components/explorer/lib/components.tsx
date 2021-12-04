@@ -58,7 +58,7 @@ export const Item: FC<Lib.T.ItemProps> = ({
 export const Folder: FC<Lib.T.FolderProps> = ({
   name, children, active, onClick, collapsed, id, onDragStart, onDragEnd, onDragOver,
   onDragLeave, onHelpersDragEnd, disabledItems, onBlur, onKeyUp, itemIdToAppendNew,
-  addNewType, onRightClick, itemIdToRename, onRename
+  addNewType, onRightClick, itemIdToRename, onRename, styling
 }): JSX.Element => {
   const [childrenVisibility, setChildrenVisibility] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>(name);
@@ -101,6 +101,7 @@ export const Folder: FC<Lib.T.FolderProps> = ({
         onDragEnd={onDragEnd}
         data-id={id}
         onContextMenu={onRightClickHandler}
+        styling={styling}
       >
         <div className={`details ${active}`} onClick={onClickHandler}>
           {itemIdToRename?.val != id &&
@@ -114,11 +115,19 @@ export const Folder: FC<Lib.T.FolderProps> = ({
           }
 
           <span className='chevron'>
-            <Icon name={childrenVisibility ? 'chevron-down' : 'chevron-right'} color='var(--foreground_color)' size={10} />
+            <Icon
+              name={childrenVisibility ? 'chevron-down' : 'chevron-right'}
+              color={styling?.items?.iconsColor?.chevron || '#c4c4c4'}
+              size={10}
+            />
           </span>
 
           <span className='folder'>
-            <Icon name={childrenVisibility ? 'folder-open' : 'folder-close'} size={16} color='var(--foreground_color)' />
+            <Icon
+              name={childrenVisibility ? 'folder-open' : 'folder-close'}
+              size={16}
+              color={styling?.items?.iconsColor?.folder || '#c4c4c4'}
+            />
           </span>
 
 
@@ -157,7 +166,7 @@ export const Folder: FC<Lib.T.FolderProps> = ({
 
 
 export const File: FC<Lib.T.FileProps> = ({
-  name, method, active, onClick, id, onDragStart, onDragEnd, onDragOver, itemIdToRename,
+  name, method, active, onClick, id, onDragStart, onDragEnd, onDragOver, itemIdToRename, styling,
   onDragLeave, onHelpersDragEnd, disabledItems, itemIdToAppendNew, onRightClick, onRename
 }): JSX.Element => {
   const [newName, setNewName] = useState<string>(name);
@@ -190,7 +199,9 @@ export const File: FC<Lib.T.FileProps> = ({
         draggable={true}
         onDragStart={evt => onDragStart!(evt, name, id)}
         onDragEnd={onDragEnd}
+        data-id={id}
         onContextMenu={onRightClickHandler}
+        styling={styling}
       >
         <div className={`details ${active}`} onClick={evt => onClickHandler(evt)}>
           {itemIdToRename?.val != id &&
@@ -206,7 +217,11 @@ export const File: FC<Lib.T.FileProps> = ({
           </span>
 
           <span className='method'>
-            <Icon name={`method-abbr-${method}`} size={12} />
+            <Icon
+              name={`method-abbr-${method}`}
+              size={12}
+              secondaryColor={styling?.items?.iconsColor?.methodsBackground || '#3b3e42'}
+            />
           </span>
 
           {itemIdToRename?.val == id
@@ -278,11 +293,14 @@ export const OnDragHelpers: FC<
 
 
 export const ItemAdder: FC<Lib.T.ItemAdderProps> = ({
-  type, onBlur, onKeyUp, visibility
+  type, onBlur, onKeyUp, visibility, styling
 }) => {
 
   return <>
-    <Lib.S.ExplorerItem className={`file item-adder ${visibility ? 'enabled-item-adder' : ''}`}>
+    <Lib.S.ExplorerItem
+      styling={styling}
+      className={`file item-adder ${visibility ? 'enabled-item-adder' : ''}`}
+    >
       <div className='details'>
         {type === 'file'
           ?

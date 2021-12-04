@@ -1,4 +1,12 @@
-import { DetailedHTMLProps, Dispatch, DragEvent, FocusEvent, HTMLAttributes, KeyboardEvent, SetStateAction } from 'react';
+import {
+  DetailedHTMLProps,
+  Dispatch,
+  DragEvent,
+  FocusEvent,
+  HTMLAttributes,
+  KeyboardEvent,
+  SetStateAction
+} from 'react';
 import { Icons } from '../../icon/lib/types';
 
 export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
@@ -7,21 +15,82 @@ export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElemen
   width?: string;
   height?: string;
   data: Array<FileProps | FolderProps>;
-  id: string;
   tabIndent?: number;
   onAddNew: (name: string, type: AddNewTypes) => number | string;
   onRightClick?: (id: number | string, type: OnContextMenuPayloadTypes, evt: OnContextMenuEvent) => void;
   ContextMenu?: (method: ContextMenuMethods) => void;
   contextHandlerState?: ContextMenuHandlerState
-  onErrors?: (error: string) => void;
-  styling: {
+  onErrors?: (error: ErrorThrowing) => void;
+  onChangeItems?: OnChange;
+  styling?: {
     background?: string;
-    optionHoverBackground?: string;
-    optionsColor?: string;
-    optionsBottomBorder?: string;
-    itemHover?: string;
+    scrollTrack?: string;
+    header?: {
+      titleColor?: string;
+      iconsColor?: string;
+      iconsHover?: string;
+      borderBottom?: string;
+    }
+    items?: {
+      nameColor?: string;
+      iconsColor?: {
+        chevron?: string;
+        folder?: string;
+        methodsBackground?: string;
+      },
+      activeBackground?: string;
+      hoverBackground?: string;
+      guideColor?: string;
+    }
   }
 }
+
+export type OnChange = (
+  method: OnChangeMethods,
+  newList: (FileProps | FolderProps)[]
+) => void;
+
+export type OnChangeMethods =
+  | Copy
+  | Cut
+  | NewFile
+  | NewFolder
+  | Delete
+  | Restore
+  | Rename
+  | ChangePosition
+  |
+  {
+    timing: 'undo' | 'redo';
+    detail:
+    | Copy
+    | Cut
+    | NewFile
+    | NewFolder
+    | Delete
+    | Restore
+    | Rename
+  }
+
+export type Copy = { copy: ID; into: Into, newId: ID };
+
+export type Cut = { cut: ID; into: Into, from: Into };
+
+export type NewFile = { newFile: FileProps; into: Into };
+
+export type NewFolder = { newFolder: FolderProps; into: Into };
+
+export type Delete = { delete: ID };
+
+export type Restore = { restore: ID };
+
+export type Rename = { rename: ID; to: string };
+
+export type ChangePosition = { move: ID; inside: ID; position: Position };
+
+export type ID = number | string;
+
+export type Into = ID | 'root';
 
 export type OnContextMenuEvent = React.MouseEvent<HTMLDivElement, MouseEvent> | React.MouseEvent<HTMLDivElement, globalThis.MouseEvent>
 
@@ -70,7 +139,7 @@ export type ItemIdToAppendNew = {
 
 export interface FolderProps extends
   ExplorerItem, DNDProps, Omit<ItemAdderProps, 'type'>,
-  Pick<Explorer, 'onRightClick'>,
+  Pick<Explorer, 'onRightClick' | 'styling'>,
   Pick<ItemProps, 'itemIdToRename' | 'onRename'> {
   subItems: FolderProps[] | FileProps[];
   collapsed?: boolean;
@@ -79,14 +148,15 @@ export interface FolderProps extends
 }
 
 export interface FileProps extends ExplorerItem, DNDProps,
-  Pick<Explorer, 'onRightClick'>,
+  Pick<Explorer, 'onRightClick' | 'styling'>,
   Pick<ItemProps, 'itemIdToRename' | 'onRename'> {
   method: Methods;
   itemIdToAppendNew?: ItemIdToAppendNew
 }
 
-export interface ItemProps extends DNDProps, Omit<ItemAdderProps, 'type'>,
-  Pick<Explorer, 'onRightClick'> {
+export interface ItemProps extends
+  DNDProps, Omit<ItemAdderProps, 'type'>,
+  Pick<Explorer, 'onRightClick' | 'styling'> {
   item: FolderProps | FileProps;
   active: number | string | null;
   setActive: Dispatch<SetStateAction<number | string | null>>
@@ -110,7 +180,7 @@ export type OnDragEndInfo = {
 
 export type AddNewTypes = 'file' | 'folder' | undefined;
 
-export interface ItemAdderProps {
+export interface ItemAdderProps extends Pick<Explorer, 'styling'> {
   type?: AddNewTypes;
   onBlur?: (evt: FocusEvent<HTMLInputElement, Element>) => void;
   onKeyUp?: (evt: KeyboardEvent<HTMLInputElement>) => void
@@ -139,11 +209,31 @@ export type ErrorThrowing = {
   [name: string]: any;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // //////////////////////////////
 const threeChild1: FileProps[] = [
   {
     name: 'this is an api',
-    method: 'post',
+    method: 'copy',
     id: 1
   },
   {
@@ -402,5 +492,5 @@ export const apiCallerExplorerThings: Array<FileProps | FolderProps> = [
       },
     ]
   },
-  ...threeChild7
+  ...threeChild7,
 ]

@@ -25,3 +25,4 @@ export { Icon } from './ui-components/icon';
 export type { Icons as IconNames } from './ui-components/icon/lib/types'
 
 export { Explorer } from './ui-components/explorer';
+export { ScrollSection } from './ui-components/scroll-section';

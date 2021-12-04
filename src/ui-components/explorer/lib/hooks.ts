@@ -1,4 +1,13 @@
-import { Dispatch, DragEvent, FocusEvent, KeyboardEvent, SetStateAction, useCallback, useEffect, useState } from 'react'
+import {
+  Dispatch,
+  DragEvent,
+  FocusEvent,
+  KeyboardEvent,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState
+} from 'react'
 import * as Lib from '.';
 // @ts-ignore
 import { findNested } from '../../../helpers'
@@ -10,19 +19,19 @@ const GHOST_CLASS_NAME = 'attornStudioDraggedItemGhostClassName'
 export const useExplorer = (
   explorerRef: React.RefObject<HTMLDivElement>,
   {
-    width, id, tabIndent = 15, data: explorerData, onAddNew,
-    onRightClick, contextHandlerState, onErrors
+    width, tabIndent = 15, data: explorerData, onAddNew,
+    onRightClick, contextHandlerState, onErrors, onChangeItems
   }:
     Pick<
       Lib.T.Explorer,
       'width'
-      | 'id'
       | 'tabIndent'
       | 'data'
       | 'onAddNew'
       | 'onRightClick'
       | 'contextHandlerState'
       | 'onErrors'
+      | 'onChangeItems'
     >
 ) => {
   const [addNew, setAddNew] = useState<Lib.T.AddNewTypes>(undefined)
@@ -36,12 +45,47 @@ export const useExplorer = (
   const [itemIdToRename, setItemIdToRename] = useState<string | number | null>(null)
   const [active, setActive] = useState<number | string | null>(null);
   const [toCopyOrCut, setToCopyOrCut] = useState<Lib.T.ToCopyOrCut>(null);
-
+  const [parentIdOnCopyOrCut, setParentIdOnCopyOrCut] = useState<number | string | null | 'root'>(null)
 
 
   const throwError = (error: Lib.T.ErrorThrowing) => {
     if (onErrors) {
-      onErrors(JSON.stringify(error))
+      onErrors(error)
+    }
+  }
+
+
+  const throwChange = (method: Lib.T.OnChangeMethods, newList: (Lib.T.FileProps | Lib.T.FolderProps)[]) => {
+    if (onChangeItems) {
+      console.log(method)
+      onChangeItems(method, newList);
+    }
+  }
+
+
+
+  const undoDetector = (method: Lib.T.OnChangeMethods) => {
+    const newList = stack[stackPointer];
+
+    if ('copy' in method) {
+      throwChange({ delete: method.newId }, newList);
+    }
+    else if ('cut' in method) {
+      const { cut, into, from } = method;
+      throwChange({ cut, from: into, into: from }, newList);
+    }
+    else if ('newFile' in method) {
+      throwChange({ delete: method.newFile.id }, newList);
+    }
+    else if ('newFolder' in method) {
+      throwChange({ delete: method.newFolder.id }, newList);
+    }
+    else if ('delete' in method) {
+      throwChange({ restore: method.delete }, newList);
+    }
+    else if ('rename' in method) {
+    }
+    else if ('move' in method) {
     }
   }
 
@@ -76,7 +120,7 @@ export const useExplorer = (
 
 
 
-  const onDragEnd = (evt: DragEvent<HTMLDivElement>) => {
+  const onDragEnd = (_evt: DragEvent<HTMLDivElement>) => {
     removeGhosts()
     changeItemPosition()
     setDraggedID(undefined)
@@ -158,8 +202,9 @@ export const useExplorer = (
 
   const diagnoseJsonString = (jsonString: string) => {
     return jsonString
-      .replace(/\[,{/g, '[{')
-      .replace(/},]/g, '}]')
+      ?.replace(/\[,{/g, '[{')
+      ?.replace(/},]/g, '}]')
+      ?.replace(/,,/g, ',')
   }
 
 
@@ -201,7 +246,10 @@ export const useExplorer = (
       })
     }
 
-    addToStack(JSON.parse(newData))
+    const newList = JSON.parse(diagnoseJsonString(newData));
+
+    addToStack(newList)
+    throwChange({ move: draggedId, inside: onDragEndInfo.id, position: onDragEndInfo.position }, newList);
   }
 
 
@@ -264,13 +312,13 @@ export const useExplorer = (
       case 'into':
         const newElementToAppend = diagnoseJsonString(
           elementToAppend
-            .replace(elementToMove, '')
-            .replace(elementToMove + ',', '')
-            .replace(',' + elementToMove, '')
+            ?.replace(elementToMove ?? '', '')
+            ?.replace(elementToMove ?? '' + ',', '')
+            ?.replace((',' + elementToMove) ?? '', '')
         )
 
-        const elementToAppendObj = <Lib.T.FolderProps>JSON.parse(newElementToAppend)
-        elementToAppendObj.subItems.push(JSON.parse(elementToMove))
+        const elementToAppendObj = <Lib.T.FolderProps>JSON.parse(diagnoseJsonString(newElementToAppend))
+        elementToAppendObj.subItems.push(JSON.parse(diagnoseJsonString(elementToMove)))
 
         if (!removedDataString.includes(newElementToAppend)) {
           return throwError({
@@ -322,14 +370,30 @@ export const useExplorer = (
         })
       }
 
-      addToStack(JSON.parse(newData))
+      const parsedNewData = JSON.parse(diagnoseJsonString(newData))
+      addToStack(parsedNewData)
+
+      if (addNew === 'file') {
+        throwChange({ newFile: <Lib.T.FileProps>elementToMove, into: folderIdToAppendNew }, parsedNewData)
+      }
+      else {
+        throwChange({ newFolder: <Lib.T.FolderProps>elementToMove, into: folderIdToAppendNew }, parsedNewData)
+      }
     }
     else {
       if (addNew === 'file') {
-        addToStack([...data, { id, name, method: 'post' }])
+        const newFile: Lib.T.FileProps = { id, name, method: 'post' }
+        const newList = [...data, newFile]
+        addToStack(newList)
+        throwChange({ newFile, into: 'root' }, newList)
+
       }
       else if (addNew === 'folder') {
-        addToStack([...data, { id, name, subItems: [] }])
+        const newFolder: Lib.T.FolderProps = { id, name, subItems: [] };
+        const newList = [...data, newFolder];
+        addToStack(newList)
+        throwChange({ newFolder, into: 'root' }, newList)
+
       }
     }
 
@@ -370,20 +434,23 @@ export const useExplorer = (
       if (!id) { return }
 
       const item = findNested(data, 'id', id);
-      if (!item) {
-        return throwError({
-          message: '!item',
-          fn: 'Actions.delete'
-        })
-      }
+      if (!item) { return }
 
       const dataString = JSON.stringify(data);
 
       const exactItem = findExactElement(dataString, JSON.stringify(item));
-      if (!exactItem) { return }
+      if (!exactItem) {
+        return throwError({
+          message: '!exactItem',
+          fn: 'Actions.delete'
+        })
+      }
 
       const newData = dataString.replace(exactItem, '');
-      addToStack(JSON.parse(newData));
+      const parsedNewData = JSON.parse(diagnoseJsonString(newData));
+
+      addToStack(parsedNewData);
+      throwChange({ delete: id }, parsedNewData)
     }
 
     static copy(rightClickedId?: string | number) {
@@ -403,7 +470,7 @@ export const useExplorer = (
       if (!idToAppend) { return }
 
 
-      const itemObj = JSON.parse(item);
+      const itemObj = JSON.parse(diagnoseJsonString(item));
       const fileOrItem = itemObj.method ? 'file' : 'folder';
 
       let newData = JSON.stringify(data);
@@ -433,8 +500,16 @@ export const useExplorer = (
           })
         }
         newData = diagnoseJsonString(appendedData)
-        addToStack(JSON.parse(newData))
+        const parsedNewData = JSON.parse(diagnoseJsonString(newData))
 
+        addToStack(parsedNewData)
+        if (action === 'copy') {
+          throwChange({ copy: JSON.parse(diagnoseJsonString(toCopyOrCut.item)).id, newId: itemObj.id, into: idToAppend }, parsedNewData)
+        }
+        else {
+          throwChange({ cut: itemObj.id, into: idToAppend, from: parentIdOnCopyOrCut! }, parsedNewData)
+          setToCopyOrCut(null)
+        }
       }
       else {
         const { current: explorer } = explorerRef;
@@ -448,10 +523,28 @@ export const useExplorer = (
         const activeItemContainer = <HTMLDivElement | null>explorer
           .querySelector('.details.true')?.parentNode?.parentNode?.parentNode;
 
+
+
+        const dealWithRoot = () => {
+          const newList = [...JSON.parse(diagnoseJsonString(newData)), itemObj]
+          addToStack(newList)
+
+          if (action === 'copy') {
+            throwChange({ copy: JSON.parse(diagnoseJsonString(toCopyOrCut.item)).id, newId: itemObj.id, into: 'root' }, newList)
+          }
+          else {
+            throwChange({ cut: itemObj.id, into: 'root', from: parentIdOnCopyOrCut! }, newList)
+            setToCopyOrCut(null)
+          }
+        }
+
+
         if (activeItemContainer) {
           const id = activeItemContainer.getAttribute('data-id');
+
           if (id) {
-            const elementToAppend = findNested(data, 'id', parseFloat(id.toString()));
+            const elementToAppend = findNested(data, 'id', id.toString());
+
             if (elementToAppend && !elementToAppend.method) {
               const appendedData = appendNewData(newData, JSON.stringify(elementToAppend), item, 'into')
               if (!appendedData) {
@@ -461,18 +554,29 @@ export const useExplorer = (
                 })
               }
               newData = diagnoseJsonString(appendedData)
-              addToStack(JSON.parse(newData))
+              const parsedNewData = JSON.parse(diagnoseJsonString(newData));
+              addToStack(parsedNewData)
+
+              if (action === 'copy') {
+                throwChange({ copy: JSON.parse(diagnoseJsonString(toCopyOrCut.item)).id, newId: itemObj.id, into: id }, parsedNewData)
+              }
+              else {
+                throwChange({ cut: itemObj.id, into: id, from: parentIdOnCopyOrCut! }, parsedNewData)
+                setToCopyOrCut(null)
+              }
             }
+
+
             else {
-              addToStack([...data, itemObj])
+              dealWithRoot()
             }
           }
           else {
-            addToStack([...data, itemObj])
+            dealWithRoot()
           }
         }
         else {
-          addToStack([...data, itemObj])
+          dealWithRoot()
         }
       }
     }
@@ -492,6 +596,14 @@ export const useExplorer = (
     const id = rightClickedId || active
     if (!id) { return }
 
+    const { current: explorer } = explorerRef;
+    if (!explorer) {
+      return throwError({
+        message: 'explorer not found',
+        fn: 'setItemToCopyOrCut'
+      })
+    }
+
     const item = findNested(data, 'id', id);
     if (!item) {
       return throwError({
@@ -501,6 +613,30 @@ export const useExplorer = (
     }
 
     setToCopyOrCut({ item: JSON.stringify(item), action });
+
+    if (onChangeItems) {
+      const thisElement = <HTMLDivElement | null>explorer.querySelector(`div[data-id="${id}"]`);
+
+      if (!thisElement) {
+        return throwError({
+          message: '!thisElement',
+          fn: 'setItemToCopyOrCut'
+        })
+      }
+
+      const parent = <HTMLDivElement | null>thisElement.parentNode?.parentNode;
+      const parentId = parent?.getAttribute('data-id');
+
+      if (parentId) {
+        setParentIdOnCopyOrCut(parentId)
+      }
+      else if (parent?.classList.contains('bodyChild')) {
+        setParentIdOnCopyOrCut('root');
+      }
+      else {
+        setParentIdOnCopyOrCut(null)
+      }
+    }
   }
 
 
@@ -517,7 +653,10 @@ export const useExplorer = (
     }
     const newItem = JSON.stringify(item).replace(prevName, newName);
     const newData = JSON.stringify(data).replace(JSON.stringify(item), newItem);
-    addToStack(JSON.parse(newData))
+    const parsedNewData = JSON.parse(diagnoseJsonString(newData));
+
+    addToStack(parsedNewData)
+    throwChange({ rename: targetId!, to: newName }, parsedNewData)
   }
 
 
@@ -628,13 +767,28 @@ export const useExplorer = (
     if (onRightClick) {
       onRightClick(id, type, evt)
     }
+
+    if (onChangeItems) {
+      const parent = <HTMLDivElement | null>evt.currentTarget.parentNode?.parentNode;
+      const parentID = parent?.getAttribute('data-id');
+
+      if (parentID) {
+        setParentIdOnCopyOrCut(parentID)
+      }
+      else if (parent?.classList.contains('bodyChild')) {
+        setParentIdOnCopyOrCut('root');
+      }
+      else {
+        setParentIdOnCopyOrCut(null)
+      }
+    }
   }
 
 
 
   const { on: onResize } = useResize(explorerRef, { width }, throwError)
-  const { } = useIndents({ data, id, tabIndent })
-  const { I: headerI, on: onHeader } = useHeader(collapsed, setCollapsed, setAddNew, addNewItem)
+  const { } = useIndents(explorerRef, { data, tabIndent }, throwError)
+  const { I: headerI, on: onHeader } = useHeader(collapsed, setCollapsed, setAddNew, addNewItem, throwError, explorerRef)
   useEffect(() => setData(stack[stackPointer]), [stackPointer])
   useEffect(contextHandler, [contextHandlerState])
   return {
@@ -741,7 +895,9 @@ const useResize = (
 
 
 const useIndents = (
-  { id, tabIndent = 15, data }: Pick<Lib.T.Explorer, | 'id' | 'tabIndent' | 'data'>
+  explorerRef: React.RefObject<HTMLDivElement>,
+  { tabIndent = 15, data }: Pick<Lib.T.Explorer, 'tabIndent' | 'data'>,
+  throwError: (error: Lib.T.ErrorThrowing) => void
 ) => {
   const setIndent = (el: HTMLDivElement, flag: number) => {
     const children = <HTMLDivElement | null>el.querySelector('.children');
@@ -771,7 +927,14 @@ const useIndents = (
 
 
   const setIndents = () => {
-    const explorerBody = <HTMLDivElement>document.getElementById(id)!.querySelector('.body')!;
+    const { current: explorer } = explorerRef
+    if (!explorer) {
+      throwError({
+        message: 'explorer not found',
+        fn: 'setIndents'
+      })
+    }
+    const explorerBody = <HTMLDivElement>explorer?.querySelector('.bodyChild > div')
     const items = <NodeListOf<HTMLDivElement>>explorerBody.childNodes;
     items.forEach(item => setIndent(item, tabIndent))
   }
@@ -788,7 +951,9 @@ const useHeader = (
   collapsed: boolean,
   setCollapsed: Dispatch<SetStateAction<boolean>>,
   setAddNew: Dispatch<SetStateAction<Lib.T.AddNewTypes>>,
-  addNewItem: (name: string) => void
+  addNewItem: (name: string) => void,
+  throwError: (error: Lib.T.ErrorThrowing) => void,
+  explorerRef: React.RefObject<HTMLDivElement>
 ) => {
   const collapseAll = () => setCollapsed(!collapsed)
 
@@ -804,8 +969,20 @@ const useHeader = (
 
 
   const onAddNew = (type: Lib.T.AddNewTypes) => {
-    setAddNew(type)
+    const { current: explorer } = explorerRef;
+    if (!explorer) {
+      throwError({
+        message: 'explorer not found',
+        fn: 'addNewItem'
+      })
+    }
 
+    const scrollSection = <HTMLDivElement | null>explorer?.querySelector('.bodyChild > div:nth-child(1)')
+    if (scrollSection) {
+      setTimeout(() => scrollSection.scrollLeft = 0, 35);
+    }
+
+    setAddNew(type)
     setTimeout(() => {
       const input = <HTMLInputElement>document.querySelectorAll('.enabled-item-adder input')[0]
       if (!input) { return }

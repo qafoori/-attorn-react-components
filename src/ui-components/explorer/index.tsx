@@ -1,16 +1,16 @@
 import React, { FC, useRef } from "react"
 import { Icon } from "../icon";
 import * as Lib from './lib';
-
+import { Scrollbars } from 'react-custom-scrollbars';
 
 export const Explorer: FC<Lib.T.Explorer> = ({
-  maxWidth, minWidth, width, height, styling, data, id, onAddNew,
-  onRightClick, ContextMenu, contextHandlerState, onErrors
+  maxWidth, minWidth, width, height, styling, data, onAddNew,
+  onRightClick, ContextMenu, contextHandlerState, onErrors, onChangeItems
   , ..._
 }): JSX.Element => {
   const explorer = useRef<HTMLDivElement>(null);
   const { on, I, states } = Lib.H.useExplorer(explorer, {
-    width, id, data, onAddNew, onRightClick, contextHandlerState, onErrors
+    width, data, onAddNew, onRightClick, contextHandlerState, onErrors, onChangeItems
   });
 
   return (
@@ -24,12 +24,10 @@ export const Explorer: FC<Lib.T.Explorer> = ({
       styling={styling}
       ref={explorer}
       onContextMenu={evt => on.rightClickHandler(evt, '', 'whiteArea')}
-      id={id}
       {..._ as any}
     >
       <span
         className='resizeHandler'
-        id='some'
         onMouseDown={on.mouseDown}
         onDoubleClick={on.doubleClick}
       />
@@ -40,7 +38,7 @@ export const Explorer: FC<Lib.T.Explorer> = ({
             <span onClick={item.onClick} key={index} title={item.name}>
               <Icon
                 name={item.name}
-                color={styling.optionsColor || 'white'}
+                color={styling?.header?.iconsColor || '#bcbcbc'}
                 size={item.size}
               />
             </span>
@@ -48,37 +46,41 @@ export const Explorer: FC<Lib.T.Explorer> = ({
         </div>
 
         <div className='body' onClick={on.bodyClick}>
-          {I.data.map((item, index) =>
-            <Lib.C.Item
-              key={index}
-              item={item}
-              active={states.active.val}
-              setActive={states.active.set}
-              collapsed={I.collapsed}
-              onDragStart={on.dragStart}
-              onDragEnd={on.dragEnd}
-              onDragOver={on.dragOver}
-              onDragLeave={on.dragLeave}
-              onHelpersDragEnd={on.helpersDragEnd}
-              disabledItems={states.addNew.val !== undefined}
-              itemIdToAppendNew={states.folderIdToAppendNew}
-              addNewType={states.addNew.val}
+          <Scrollbars className='bodyChild'>
+            {I.data.map((item, index) =>
+              <Lib.C.Item
+                key={index}
+                item={item}
+                active={states.active.val}
+                setActive={states.active.set}
+                collapsed={I.collapsed}
+                onDragStart={on.dragStart}
+                onDragEnd={on.dragEnd}
+                onDragOver={on.dragOver}
+                onDragLeave={on.dragLeave}
+                onHelpersDragEnd={on.helpersDragEnd}
+                disabledItems={states.addNew.val !== undefined}
+                itemIdToAppendNew={states.folderIdToAppendNew}
+                addNewType={states.addNew.val}
+                onBlur={on.adderInputBlur}
+                onKeyUp={on.adderInputKeyUp}
+                onRightClick={(id, type, evt) => on.rightClickHandler(evt, id, type)}
+                itemIdToRename={states.itemIdToRename}
+                onRename={on.rename}
+                styling={styling}
+              />
+            )}
+
+            <Lib.C.ItemAdder
+              type={states.addNew.val}
               onBlur={on.adderInputBlur}
               onKeyUp={on.adderInputKeyUp}
-              onRightClick={(id, type, evt) => on.rightClickHandler(evt, id, type)}
-              itemIdToRename={states.itemIdToRename}
-              onRename={on.rename}
+              styling={styling}
+              visibility={states.addNew.val !== undefined && states.folderIdToAppendNew.val === null}
             />
-          )}
-
-          <Lib.C.ItemAdder
-            type={states.addNew.val}
-            onBlur={on.adderInputBlur}
-            onKeyUp={on.adderInputKeyUp}
-            visibility={states.addNew.val !== undefined && states.folderIdToAppendNew.val === null}
-          />
+          </Scrollbars>
         </div>
       </div>
-    </Lib.S.Explorer>
+    </Lib.S.Explorer >
   )
 }
