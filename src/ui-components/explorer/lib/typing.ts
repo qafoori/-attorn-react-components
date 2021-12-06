@@ -16,12 +16,19 @@ export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElemen
   height?: string;
   data: Array<FileProps | FolderProps>;
   tabIndent?: number;
-  onAddNew: (name: string, type: AddNewTypes) => number | string;
-  onRightClick?: (id: number | string, type: OnContextMenuPayloadTypes, evt: OnContextMenuEvent) => void;
+  onAddNew: (name: string, type: AddNewTypes) => Promise<number | string>;
+  onRightClick?: (
+    id: number | string,
+    type: OnContextMenuPayloadTypes,
+    evt: OnContextMenuEvent,
+    pasteEnabled: boolean,
+    timingEnabled: TimingEnabled
+  ) => void;
   ContextMenu?: (method: ContextMenuMethods) => void;
   contextHandlerState?: ContextMenuHandlerState
   onErrors?: (error: ErrorThrowing) => void;
   onChangeItems?: OnChange;
+  beforeDelete?: (id: number | string, item: string, type: 'file' | 'folder') => boolean;
   styling?: {
     background?: string;
     scrollTrack?: string;
@@ -43,6 +50,11 @@ export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElemen
       guideColor?: string;
     }
   }
+}
+
+export type TimingEnabled = {
+  undo: boolean;
+  redo: boolean;
 }
 
 export type OnChange = (
@@ -84,9 +96,9 @@ export type Delete = { delete: ID };
 
 export type Restore = { restore: ID };
 
-export type Rename = { rename: ID; to: string };
+export type Rename = { rename: ID; to: string, from: string };
 
-export type ChangePosition = { move: ID; inside: ID; position: Position };
+export type ChangePosition = { move: true };
 
 export type ID = number | string;
 
@@ -140,7 +152,7 @@ export type ItemIdToAppendNew = {
 export interface FolderProps extends
   ExplorerItem, DNDProps, Omit<ItemAdderProps, 'type'>,
   Pick<Explorer, 'onRightClick' | 'styling'>,
-  Pick<ItemProps, 'itemIdToRename' | 'onRename'> {
+  Pick<ItemProps, 'itemIdToRename' | 'onRename' | 'pasteEnabled' | 'timingEnabled'> {
   subItems: FolderProps[] | FileProps[];
   collapsed?: boolean;
   itemIdToAppendNew?: ItemIdToAppendNew
@@ -149,7 +161,7 @@ export interface FolderProps extends
 
 export interface FileProps extends ExplorerItem, DNDProps,
   Pick<Explorer, 'onRightClick' | 'styling'>,
-  Pick<ItemProps, 'itemIdToRename' | 'onRename'> {
+  Pick<ItemProps, 'itemIdToRename' | 'onRename' | 'pasteEnabled' | 'timingEnabled'> {
   method: Methods;
   itemIdToAppendNew?: ItemIdToAppendNew
 }
@@ -165,6 +177,8 @@ export interface ItemProps extends
   itemIdToAppendNew: ItemIdToAppendNew
   addNewType: AddNewTypes
   itemIdToRename?: { val: string | number | null, set: Dispatch<SetStateAction<string | number | null>> }
+  pasteEnabled?: boolean;
+  timingEnabled?: TimingEnabled;
   onRename?: {
     blur: OnRenameType<React.FocusEvent<HTMLInputElement, Element>>;
     keyUp: OnRenameType<React.KeyboardEvent<HTMLInputElement>>;

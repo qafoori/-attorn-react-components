@@ -5,12 +5,12 @@ import { Scrollbars } from 'react-custom-scrollbars';
 
 export const Explorer: FC<Lib.T.Explorer> = ({
   maxWidth, minWidth, width, height, styling, data, onAddNew,
-  onRightClick, ContextMenu, contextHandlerState, onErrors, onChangeItems
+  onRightClick, ContextMenu, contextHandlerState, onErrors, onChangeItems, beforeDelete
   , ..._
 }): JSX.Element => {
   const explorer = useRef<HTMLDivElement>(null);
   const { on, I, states } = Lib.H.useExplorer(explorer, {
-    width, data, onAddNew, onRightClick, contextHandlerState, onErrors, onChangeItems
+    width, data, onAddNew, onRightClick, contextHandlerState, onErrors, onChangeItems, beforeDelete
   });
 
   return (
@@ -68,6 +68,8 @@ export const Explorer: FC<Lib.T.Explorer> = ({
                 itemIdToRename={states.itemIdToRename}
                 onRename={on.rename}
                 styling={styling}
+                pasteEnabled={states.pasteEnabled.val}
+                timingEnabled={states.timingEnabled.val}
               />
             )}
 

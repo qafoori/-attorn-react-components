@@ -58,10 +58,11 @@ export const Item: FC<Lib.T.ItemProps> = ({
 export const Folder: FC<Lib.T.FolderProps> = ({
   name, children, active, onClick, collapsed, id, onDragStart, onDragEnd, onDragOver,
   onDragLeave, onHelpersDragEnd, disabledItems, onBlur, onKeyUp, itemIdToAppendNew,
-  addNewType, onRightClick, itemIdToRename, onRename, styling
+  addNewType, onRightClick, itemIdToRename, onRename, styling, pasteEnabled, timingEnabled
 }): JSX.Element => {
   const [childrenVisibility, setChildrenVisibility] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>(name);
+
 
   const onClickHandler = (evt: MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
     setChildrenVisibility(!childrenVisibility)
@@ -86,7 +87,7 @@ export const Folder: FC<Lib.T.FolderProps> = ({
     }
     itemIdToAppendNew!.set(id)
     if (onRightClick) {
-      onRightClick(id, 'folder', evt)
+      onRightClick(id, 'folder', evt, pasteEnabled ? pasteEnabled : false, timingEnabled!)
     }
   }
 
@@ -167,7 +168,8 @@ export const Folder: FC<Lib.T.FolderProps> = ({
 
 export const File: FC<Lib.T.FileProps> = ({
   name, method, active, onClick, id, onDragStart, onDragEnd, onDragOver, itemIdToRename, styling,
-  onDragLeave, onHelpersDragEnd, disabledItems, itemIdToAppendNew, onRightClick, onRename
+  onDragLeave, onHelpersDragEnd, disabledItems, itemIdToAppendNew, onRightClick, onRename, pasteEnabled,
+  timingEnabled
 }): JSX.Element => {
   const [newName, setNewName] = useState<string>(name);
 
@@ -188,7 +190,7 @@ export const File: FC<Lib.T.FileProps> = ({
 
   const onRightClickHandler = (evt: React.MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
     if (onRightClick) {
-      onRightClick(id, 'file', evt)
+      onRightClick(id, 'file', evt, pasteEnabled ? pasteEnabled : false, timingEnabled!)
     }
   }
 

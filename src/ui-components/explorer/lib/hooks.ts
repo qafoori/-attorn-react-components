@@ -19,12 +19,12 @@ const GHOST_CLASS_NAME = 'attornStudioDraggedItemGhostClassName'
 export const useExplorer = (
   explorerRef: React.RefObject<HTMLDivElement>,
   {
-    width, tabIndent = 15, data: explorerData, onAddNew,
+    width, tabIndent = 15, data: explorerData, onAddNew, beforeDelete,
     onRightClick, contextHandlerState, onErrors, onChangeItems
   }:
     Pick<
       Lib.T.Explorer,
-      'width'
+      | 'width'
       | 'tabIndent'
       | 'data'
       | 'onAddNew'
@@ -32,6 +32,7 @@ export const useExplorer = (
       | 'contextHandlerState'
       | 'onErrors'
       | 'onChangeItems'
+      | 'beforeDelete'
     >
 ) => {
   const [addNew, setAddNew] = useState<Lib.T.AddNewTypes>(undefined)
@@ -40,13 +41,16 @@ export const useExplorer = (
   const [draggedId, setDraggedID] = useState<number | string>()
   const [data, setData] = useState<(Lib.T.FileProps | Lib.T.FolderProps)[]>(explorerData)
   const [stack, setStack] = useState<(Lib.T.FileProps | Lib.T.FolderProps)[][]>([explorerData])
+  const [timingStack, setTimingStack] = useState<Lib.T.OnChangeMethods[]>([])
   const [stackPointer, setStackPointer] = useState<number>(0)
   const [folderIdToAppendNew, setFolderIdToAppendNew] = useState<string | number | null>(null)
   const [itemIdToRename, setItemIdToRename] = useState<string | number | null>(null)
   const [active, setActive] = useState<number | string | null>(null);
   const [toCopyOrCut, setToCopyOrCut] = useState<Lib.T.ToCopyOrCut>(null);
   const [parentIdOnCopyOrCut, setParentIdOnCopyOrCut] = useState<number | string | null | 'root'>(null)
-
+  const [pasteEnabled, setPasteEnabled] = useState<boolean>(false);
+  const [timingEnabled, setTimingEnabled] = useState<Lib.T.TimingEnabled>({ undo: false, redo: false })
+  const [rightClickPosition, setRightClickPosition] = useState<Lib.T.OnContextMenuPayloadTypes | null>(null)
 
   const throwError = (error: Lib.T.ErrorThrowing) => {
     if (onErrors) {
@@ -55,40 +59,81 @@ export const useExplorer = (
   }
 
 
-  const throwChange = (method: Lib.T.OnChangeMethods, newList: (Lib.T.FileProps | Lib.T.FolderProps)[]) => {
+  const throwChange = (
+    method: Lib.T.OnChangeMethods,
+    newList: (Lib.T.FileProps | Lib.T.FolderProps)[],
+    setTiming: boolean = true
+  ) => {
     if (onChangeItems) {
-      console.log(method)
-      onChangeItems(method, newList);
+      onChangeItems(method, newList)
+      if (setTiming) {
+        setTimingStack([...timingStack, method])
+      }
     }
   }
 
 
 
-  const undoDetector = (method: Lib.T.OnChangeMethods) => {
-    const newList = stack[stackPointer];
+  const timingDetector = (method: Lib.T.OnChangeMethods, timing: 'undo' | 'redo') => {
+    if (!method) {
+      return
+    }
+    const newList = stack[stackPointer - 1] || stack[stackPointer + 1];
 
     if ('copy' in method) {
-      throwChange({ delete: method.newId }, newList);
+      if (timing === 'undo') {
+        throwChange({ delete: method.newId }, newList, false);
+      }
+      else {
+        throwChange({ restore: method.newId }, newList, false);
+      }
     }
     else if ('cut' in method) {
       const { cut, into, from } = method;
-      throwChange({ cut, from: into, into: from }, newList);
+      if (timing === 'undo') {
+        throwChange({ cut, from: into, into: from }, newList, false);
+      }
+      else {
+        throwChange({ cut, from, into }, newList, false);
+      }
     }
     else if ('newFile' in method) {
-      throwChange({ delete: method.newFile.id }, newList);
+      if (timing === 'undo') {
+        throwChange({ delete: method.newFile.id }, newList, false);
+      }
+      else {
+        throwChange({ restore: method.newFile.id }, newList, false);
+      }
     }
     else if ('newFolder' in method) {
-      throwChange({ delete: method.newFolder.id }, newList);
+      if (timing === 'undo') {
+        throwChange({ delete: method.newFolder.id }, newList, false);
+      }
+      else {
+        throwChange({ restore: method.newFolder.id }, newList, false);
+      }
     }
     else if ('delete' in method) {
-      throwChange({ restore: method.delete }, newList);
+      if (timing === 'undo') {
+        throwChange({ restore: method.delete }, newList, false);
+      }
+      else {
+        throwChange({ delete: method.delete }, newList, false)
+      }
     }
     else if ('rename' in method) {
+      const { from, rename, to } = method;
+      if (timing === 'undo') {
+        throwChange({ rename, to: from, from: to }, newList, false);
+      }
+      else {
+        throwChange({ rename, to, from }, newList, false);
+      }
     }
     else if ('move' in method) {
+      throwChange({ move: true }, newList, false);
     }
   }
-
 
 
   const createGhost = (name: string, evt: DragEvent<HTMLDivElement>) => {
@@ -249,7 +294,7 @@ export const useExplorer = (
     const newList = JSON.parse(diagnoseJsonString(newData));
 
     addToStack(newList)
-    throwChange({ move: draggedId, inside: onDragEndInfo.id, position: onDragEndInfo.position }, newList);
+    throwChange({ move: true }, newList);
   }
 
 
@@ -347,8 +392,8 @@ export const useExplorer = (
 
 
 
-  const addNewItem = (name: string) => {
-    const id = onAddNew(name, addNew);
+  const addNewItem = async (name: string) => {
+    const id = await onAddNew(name, addNew);
 
     if (folderIdToAppendNew) {
       const elementToAppend = findNested(data, 'id', folderIdToAppendNew);
@@ -415,6 +460,7 @@ export const useExplorer = (
       const prevPointer = stackPointer - 1
       if (stackPointer > 0) {
         setStackPointer(prevPointer)
+        timingDetector(timingStack[prevPointer], 'undo')
       }
     }
 
@@ -422,6 +468,7 @@ export const useExplorer = (
       const nextPointer = stackPointer + 1
       if (nextPointer < stack.length) {
         setStackPointer(nextPointer)
+        timingDetector(timingStack[stackPointer], 'redo')
       }
     }
 
@@ -430,27 +477,34 @@ export const useExplorer = (
     }
 
     static delete(rightClickedId?: string | number) {
+      let flag = true;
       const id = rightClickedId || active;
       if (!id) { return }
 
       const item = findNested(data, 'id', id);
       if (!item) { return }
 
-      const dataString = JSON.stringify(data);
-
-      const exactItem = findExactElement(dataString, JSON.stringify(item));
-      if (!exactItem) {
-        return throwError({
-          message: '!exactItem',
-          fn: 'Actions.delete'
-        })
+      if (beforeDelete) {
+        flag = beforeDelete(id, item.name, item.method ? 'file' : 'folder');
       }
 
-      const newData = dataString.replace(exactItem, '');
-      const parsedNewData = JSON.parse(diagnoseJsonString(newData));
+      if (flag) {
+        const dataString = JSON.stringify(data);
 
-      addToStack(parsedNewData);
-      throwChange({ delete: id }, parsedNewData)
+        const exactItem = findExactElement(dataString, JSON.stringify(item));
+        if (!exactItem) {
+          return throwError({
+            message: '!exactItem',
+            fn: 'Actions.delete'
+          })
+        }
+
+        const newData = dataString.replace(exactItem, '');
+        const parsedNewData = JSON.parse(diagnoseJsonString(newData));
+
+        addToStack(parsedNewData);
+        throwChange({ delete: id }, parsedNewData)
+      }
     }
 
     static copy(rightClickedId?: string | number) {
@@ -461,14 +515,11 @@ export const useExplorer = (
       setItemToCopyOrCut('cut', rightClickedId);
     }
 
-    static paste(rightClickedId?: string | number) {
+    static async paste(rightClickedId?: string | number) {
       if (!toCopyOrCut) { return }
+
       const { action } = toCopyOrCut;
       let item = toCopyOrCut.item;
-
-      const idToAppend = rightClickedId || active;
-      if (!idToAppend) { return }
-
 
       const itemObj = JSON.parse(diagnoseJsonString(item));
       const fileOrItem = itemObj.method ? 'file' : 'folder';
@@ -483,35 +534,12 @@ export const useExplorer = (
         }
       }
       else {
-        newId = onAddNew(itemObj.name, fileOrItem);
+        newId = await onAddNew(itemObj.name, fileOrItem);
         itemObj.id = newId;
         item = JSON.stringify(itemObj)
       }
 
-
-      const elementToAppend = findNested(data, 'id', idToAppend);
-
-      if (elementToAppend && !elementToAppend.method) {
-        const appendedData = appendNewData(newData, JSON.stringify(elementToAppend), item, 'into')
-        if (!appendedData) {
-          return throwError({
-            message: '!appendedData',
-            fn: 'Actions.paste'
-          })
-        }
-        newData = diagnoseJsonString(appendedData)
-        const parsedNewData = JSON.parse(diagnoseJsonString(newData))
-
-        addToStack(parsedNewData)
-        if (action === 'copy') {
-          throwChange({ copy: JSON.parse(diagnoseJsonString(toCopyOrCut.item)).id, newId: itemObj.id, into: idToAppend }, parsedNewData)
-        }
-        else {
-          throwChange({ cut: itemObj.id, into: idToAppend, from: parentIdOnCopyOrCut! }, parsedNewData)
-          setToCopyOrCut(null)
-        }
-      }
-      else {
+      const pasteCatch = () => {
         const { current: explorer } = explorerRef;
         if (!explorer) {
           return throwError({
@@ -522,8 +550,6 @@ export const useExplorer = (
 
         const activeItemContainer = <HTMLDivElement | null>explorer
           .querySelector('.details.true')?.parentNode?.parentNode?.parentNode;
-
-
 
         const dealWithRoot = () => {
           const newList = [...JSON.parse(diagnoseJsonString(newData)), itemObj]
@@ -579,6 +605,49 @@ export const useExplorer = (
           dealWithRoot()
         }
       }
+
+      if (rightClickPosition !== 'whiteArea') {
+        const idToAppend = rightClickedId || active;
+        if (!idToAppend) { return }
+        const elementToAppend = findNested(data, 'id', idToAppend);
+
+
+        if (elementToAppend && !elementToAppend.method) {
+          const appendedData = appendNewData(newData, JSON.stringify(elementToAppend), item, 'into')
+          if (!appendedData) {
+            return throwError({
+              message: '!appendedData',
+              fn: 'Actions.paste'
+            })
+          }
+          newData = diagnoseJsonString(appendedData)
+          const parsedNewData = JSON.parse(diagnoseJsonString(newData))
+
+          addToStack(parsedNewData)
+          if (action === 'copy') {
+            throwChange({ copy: JSON.parse(diagnoseJsonString(toCopyOrCut.item)).id, newId: itemObj.id, into: idToAppend }, parsedNewData)
+          }
+          else {
+            throwChange({ cut: itemObj.id, into: idToAppend, from: parentIdOnCopyOrCut! }, parsedNewData)
+            setToCopyOrCut(null)
+          }
+        }
+        else {
+          if (!elementToAppend.method) {
+            throwError({
+              message: '!elementToAppend.method',
+              fn: 'Actions.paste'
+            })
+          }
+          else {
+            pasteCatch()
+          }
+        }
+      }
+      else {
+        pasteCatch()
+      }
+      removeCut();
     }
 
     static newFile() {
@@ -656,7 +725,7 @@ export const useExplorer = (
     const parsedNewData = JSON.parse(diagnoseJsonString(newData));
 
     addToStack(parsedNewData)
-    throwChange({ rename: targetId!, to: newName }, parsedNewData)
+    throwChange({ rename: targetId!, to: newName, from: prevName }, parsedNewData)
   }
 
 
@@ -712,6 +781,25 @@ export const useExplorer = (
   }
 
 
+  const removeCut = () => {
+    const { current: explorer } = explorerRef;
+    if (!explorer) {
+      return throwError({
+        message: 'explorer not found',
+        fn: 'Actions.paste'
+      })
+    }
+    explorer.querySelectorAll('.cut').forEach(item => item.classList.remove('cut'));
+  }
+
+
+
+  const onEscExplorer = () => {
+    setToCopyOrCut(null);
+    removeCut();
+  }
+
+
 
   const shortcutHandler = (e: KeyboardEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -725,6 +813,7 @@ export const useExplorer = (
     else if (e.which === 86 && e.ctrlKey) Actions.paste()
     else if (e.which === 78 && e.ctrlKey) Actions.newFile()
     else if (e.which === 78 && e.shiftKey) Actions.newFolder()
+    else if (e.which === 27) onEscExplorer()
     else { }
   }
 
@@ -756,6 +845,38 @@ export const useExplorer = (
 
 
 
+  const onCopyOrCut = () => {
+    if (toCopyOrCut) {
+      setPasteEnabled(true)
+
+      if (toCopyOrCut.action === 'cut') {
+        const { current: explorer } = explorerRef;
+        if (!explorer) {
+          return throwError({
+            message: 'explorer not found',
+            fn: 'onCopyOrCut'
+          })
+        }
+
+        const item = <Lib.T.FileProps | Lib.T.FolderProps>JSON.parse(diagnoseJsonString(toCopyOrCut.item));
+        const cutItem = <HTMLDivElement | null>explorer.querySelector(`div[data-id="${item.id}"]`)
+
+        if (!cutItem) {
+          return throwError({
+            message: '!cutItem',
+            fn: 'onCopyOrCut'
+          });
+        }
+
+        cutItem.classList.add('cut');
+      }
+    }
+    else {
+      setPasteEnabled(false)
+    }
+  }
+
+
   const onRightClickHandler = (
     evt: React.MouseEvent<HTMLDivElement, MouseEvent>,
     id: number | string,
@@ -764,8 +885,16 @@ export const useExplorer = (
     evt.preventDefault();
     evt.stopPropagation();
 
+    setRightClickPosition(type);
+
     if (onRightClick) {
-      onRightClick(id, type, evt)
+      const tempTimingEnabled: Lib.T.TimingEnabled = {
+        undo: stackPointer > 0,
+        redo: stackPointer + 1 < stack.length
+      }
+
+      setTimingEnabled(tempTimingEnabled);
+      onRightClick(id, type, evt, pasteEnabled, tempTimingEnabled);
     }
 
     if (onChangeItems) {
@@ -786,11 +915,18 @@ export const useExplorer = (
 
 
 
+  const onStackPointerChange = () => {
+    setData(stack[stackPointer]);
+  }
+
+
+
   const { on: onResize } = useResize(explorerRef, { width }, throwError)
   const { } = useIndents(explorerRef, { data, tabIndent }, throwError)
   const { I: headerI, on: onHeader } = useHeader(collapsed, setCollapsed, setAddNew, addNewItem, throwError, explorerRef)
-  useEffect(() => setData(stack[stackPointer]), [stackPointer])
-  useEffect(contextHandler, [contextHandlerState])
+  useEffect(onStackPointerChange, [stackPointer])
+  useEffect(onCopyOrCut, [toCopyOrCut])
+  useEffect(() => { (async () => contextHandler())() }, [contextHandlerState])
   return {
     on: {
       ...onResize,
@@ -814,7 +950,9 @@ export const useExplorer = (
       addNew: { val: addNew, set: setAddNew },
       folderIdToAppendNew: { val: folderIdToAppendNew, set: setFolderIdToAppendNew },
       itemIdToRename: { val: itemIdToRename, set: setItemIdToRename },
-      active: { val: active, set: setActive }
+      active: { val: active, set: setActive },
+      pasteEnabled: { val: pasteEnabled, set: setPasteEnabled },
+      timingEnabled: { val: timingEnabled, set: setTimingEnabled }
     }
   }
 }
@@ -953,7 +1091,7 @@ const useHeader = (
   setAddNew: Dispatch<SetStateAction<Lib.T.AddNewTypes>>,
   addNewItem: (name: string) => void,
   throwError: (error: Lib.T.ErrorThrowing) => void,
-  explorerRef: React.RefObject<HTMLDivElement>
+  explorerRef: React.RefObject<HTMLDivElement>,
 ) => {
   const collapseAll = () => setCollapsed(!collapsed)
 

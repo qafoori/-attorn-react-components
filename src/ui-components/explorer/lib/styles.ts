@@ -127,10 +127,9 @@ export const ExplorerItem = styled.div<Pick<Lib.T.Explorer, 'styling'>>`
   width: 100%;
   cursor: pointer;
 
-  /* &.disabled {
+  &.cut {
     opacity: .3;
-    pointer-events: none;
-  } */
+  }
 
   &.item-adder {
     display: none;
