@@ -17,6 +17,7 @@ export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElemen
   data: Array<FileProps | FolderProps>;
   tabIndent?: number;
   onAddNew: (name: string, type: AddNewTypes) => Promise<number | string>;
+  onReload?: () => void;
   onRightClick?: (
     id: number | string,
     type: OnContextMenuPayloadTypes,

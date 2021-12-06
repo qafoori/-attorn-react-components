@@ -1,3 +1,25 @@
+// MIT License
+//
+// Copyright (c) 2021 Attorn Studio by qafoori
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import {
   Dispatch,
   DragEvent,
@@ -20,7 +42,7 @@ export const useExplorer = (
   explorerRef: React.RefObject<HTMLDivElement>,
   {
     width, tabIndent = 15, data: explorerData, onAddNew, beforeDelete,
-    onRightClick, contextHandlerState, onErrors, onChangeItems
+    onRightClick, contextHandlerState, onErrors, onChangeItems, onReload
   }:
     Pick<
       Lib.T.Explorer,
@@ -33,6 +55,7 @@ export const useExplorer = (
       | 'onErrors'
       | 'onChangeItems'
       | 'beforeDelete'
+      | 'onReload'
     >
 ) => {
   const [addNew, setAddNew] = useState<Lib.T.AddNewTypes>(undefined)
@@ -923,7 +946,7 @@ export const useExplorer = (
 
   const { on: onResize } = useResize(explorerRef, { width }, throwError)
   const { } = useIndents(explorerRef, { data, tabIndent }, throwError)
-  const { I: headerI, on: onHeader } = useHeader(collapsed, setCollapsed, setAddNew, addNewItem, throwError, explorerRef)
+  const { I: headerI, on: onHeader } = useHeader(collapsed, setCollapsed, setAddNew, addNewItem, throwError, explorerRef, onReload)
   useEffect(onStackPointerChange, [stackPointer])
   useEffect(onCopyOrCut, [toCopyOrCut])
   useEffect(() => { (async () => contextHandler())() }, [contextHandlerState])
@@ -1092,13 +1115,14 @@ const useHeader = (
   addNewItem: (name: string) => void,
   throwError: (error: Lib.T.ErrorThrowing) => void,
   explorerRef: React.RefObject<HTMLDivElement>,
+  onReload?: () => void
 ) => {
   const collapseAll = () => setCollapsed(!collapsed)
 
 
 
   const headerOptions: Lib.T.HeaderOption[] = [
-    { name: 'reload', onClick: () => { }, size: 13 },
+    { name: 'reload', onClick: () => { if (onReload) onReload() }, size: 13 },
     { name: 'add-folder', onClick: () => onAddNew('folder'), size: 15 },
     { name: 'add-file', onClick: () => onAddNew('file'), size: 14 },
     { name: 'collapse', onClick: collapseAll, size: 13 },

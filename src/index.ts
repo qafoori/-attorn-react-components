@@ -25,4 +25,8 @@ export { Icon } from './ui-components/icon';
 export type { Icons as IconNames } from './ui-components/icon/lib/types'
 
 export { Explorer } from './ui-components/explorer';
-export { ScrollSection } from './ui-components/scroll-section';
+export * as ExplorerT from './ui-components/explorer/lib/typing';
+
+export { Resizable } from './ui-components/resizable';
+export * as ResizableT from './ui-components/resizable/lib/typing';
+
