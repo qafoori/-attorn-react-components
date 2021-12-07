@@ -5,6 +5,7 @@ export const Resizable: FC<Lib.T.Resizable> = ({
   h, w, children, handlers, ...otherProps
 }): JSX.Element => {
   const { on, resizableRef, sizes } = Lib.H.useResize({ h, w });
+  const { t, r, b, l } = handlers;
 
   return (
     <Lib.S.Resizable
@@ -13,11 +14,20 @@ export const Resizable: FC<Lib.T.Resizable> = ({
       className={`attorn-studio-resizable-component ${otherProps.className ?? ''}`}
       {...sizes}
     >
-      <span
-        className='resizeHandler'
+
+      {r && <span
+        className='resizeHandler right'
         onMouseDown={on.mouseDown}
         onDoubleClick={on.doubleClick}
-      />
+      />}
+
+      {l && <span
+        className='resizeHandler left'
+        onMouseDown={on.mouseDown}
+        onDoubleClick={on.doubleClick}
+      />}
+
+
 
       {children && children}
     </Lib.S.Resizable>

@@ -15,12 +15,23 @@ export const Resizable = styled.div<Pick<Lib.T.Resizable, 'w' | 'h'>>`
 
   .resizeHandler {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    right: -5px;
-    width: 10px;
     background: transparent;
     cursor: col-resize;
     z-index: 1;
+    background-color: yellow;
+    
+    &.right {
+      top: 0;
+      bottom: 0;
+      right: -5px;
+      width: 10px;
+    }
+
+    &.left {
+      top: 0;
+      bottom: 0;
+      left: -5px;
+      width: 10px;
+    }
   }
 `;

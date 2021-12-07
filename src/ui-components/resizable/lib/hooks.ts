@@ -3,7 +3,7 @@ import * as Lib from '.';
 
 export const useResize = ({
   w, h
-}: Lib.T.Resizable) => {
+}: Pick<Lib.T.Resizable, 'w' | 'h'>) => {
 
   const resizableRef = useRef<HTMLDivElement>(null);
 
