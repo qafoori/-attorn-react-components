@@ -944,7 +944,6 @@ export const useExplorer = (
 
 
 
-  const { on: onResize } = useResize(explorerRef, { width }, throwError)
   const { } = useIndents(explorerRef, { data, tabIndent }, throwError)
   const { I: headerI, on: onHeader } = useHeader(collapsed, setCollapsed, setAddNew, addNewItem, throwError, explorerRef, onReload)
   useEffect(onStackPointerChange, [stackPointer])
@@ -952,7 +951,6 @@ export const useExplorer = (
   useEffect(() => { (async () => contextHandler())() }, [contextHandlerState])
   return {
     on: {
-      ...onResize,
       ...onHeader,
       dragStart: onDragStart,
       dragEnd: onDragEnd,
@@ -984,74 +982,6 @@ export const useExplorer = (
 
 
 
-
-
-
-
-
-
-const useResize = (
-  explorerRef: React.RefObject<HTMLDivElement>,
-  { width }: Pick<Lib.T.Explorer, 'width'>,
-  throwError: (error: Lib.T.ErrorThrowing) => void
-) => {
-  const onMouseDown = () => {
-    const { current: explorer } = explorerRef;
-    if (!explorer) {
-      return throwError({
-        message: 'explorer not found',
-        fn: 'onMouseDown'
-      })
-    }
-
-    document.body.style.cursor = 'col-resize';
-    window.addEventListener('mouseup', onMouseUp);
-    window.addEventListener('mousemove', onMouseMove);
-  }
-
-
-
-  const onMouseMove = useCallback((evt: MouseEvent) => {
-    const { current: explorer } = explorerRef;
-    if (!explorer) {
-      return throwError({
-        message: 'explorer not found',
-        fn: 'onMouseMove'
-      })
-    }
-    explorer.style.width = (evt.clientX - explorer.offsetLeft) + 'px';
-  }, [])
-
-
-
-  const onMouseUp = useCallback(() => {
-    document.body.style.cursor = 'default';
-    window.removeEventListener('mousemove', onMouseMove);
-    window.removeEventListener('mouseup', onMouseUp);
-  }, [])
-
-
-
-  const onDoubleClick = () => {
-    const { current: explorer } = explorerRef;
-    if (!explorer) {
-      return throwError({
-        message: 'explorer not found',
-        fn: 'onDoubleClick'
-      })
-    }
-    explorer.style.width = width || '250px'
-  }
-
-
-
-  return {
-    on: {
-      mouseDown: onMouseDown,
-      doubleClick: onDoubleClick,
-    }
-  }
-}
 
 
 

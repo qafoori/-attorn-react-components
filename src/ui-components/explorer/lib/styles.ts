@@ -1,38 +1,12 @@
 import styled from 'styled-components'
 import * as Lib from '.';
 
-export const Explorer = styled.div<
-  Pick<
-    Lib.T.Explorer,
-    | 'maxWidth'
-    | 'minWidth'
-    | 'width'
-    | 'height'
-    | 'styling'
-  >
-  & {}>`
-
-  width: ${({ width }) => width || '250px'};
-  height: ${({ height }) => height || '100%'};
-  min-width: ${({ minWidth }) => minWidth || '200px'};
-  max-width: ${({ maxWidth }) => maxWidth || '500px'};
+export const Explorer = styled.div<Pick<Lib.T.Explorer, 'styling'>>`
   background-color: ${({ styling: s }) => s?.background || '#16191e'};
-  position: relative;
   padding: 0 5px 0 0;
   float: left;
-
-
-  
-  .resizeHandler {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: -5px;
-    width: 10px;
-    background: transparent;
-    cursor: col-resize;
-    z-index: 1;
-  }
+  width: 100%;
+  height: 100%;
 
   > div.explorerContainer {
     width: calc(100% + 5px);
