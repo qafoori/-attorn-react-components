@@ -45,7 +45,6 @@ export const Explorer = styled.div<Pick<Lib.T.Explorer, 'styling'>>`
     }
 
     > .body {
-      /* overflow: auto; */
       height: 100%;
       height: 100%;
 

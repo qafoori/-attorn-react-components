@@ -34,9 +34,7 @@ import * as Lib from '.';
 // @ts-ignore
 import { findNested } from '../../../helpers'
 
-
 const GHOST_CLASS_NAME = 'attornStudioDraggedItemGhostClassName'
-
 
 export const useExplorer = (
   explorerRef: React.RefObject<HTMLDivElement>,

@@ -16,22 +16,72 @@ export const Resizable = styled.div<Pick<Lib.T.Resizable, 'w' | 'h'>>`
   .resizeHandler {
     position: absolute;
     background: transparent;
-    cursor: col-resize;
     z-index: 1;
-    background-color: yellow;
     
-    &.right {
+    &.r {
       top: 0;
       bottom: 0;
       right: -5px;
       width: 10px;
+      cursor: e-resize;
     }
 
-    &.left {
+    &.l {
       top: 0;
       bottom: 0;
       left: -5px;
       width: 10px;
+      cursor: w-resize;
+    }
+
+    &.t {
+      top: -5px;
+      left: 0;
+      right: 0;
+      height: 10px;
+      width: 100%;
+      cursor: n-resize;
+    }
+
+    &.b {
+      bottom: -5px;
+      left: 0;
+      right: 0;
+      height: 10px;
+      width: 100%;
+      cursor: s-resize;
+    }
+
+    &.tr {
+      top: -5px;
+      right: -5px;
+      width: 15px;
+      height: 15px;
+      cursor: ne-resize;
+    }
+
+    &.tl {
+      top: -5px;
+      left: -5px;
+      width: 15px;
+      height: 15px;
+      cursor: nw-resize;
+    }
+
+    &.br {
+      bottom: -5px;
+      right: -5px;
+      width: 15px;
+      height: 15px;
+      cursor: se-resize;
+    }
+
+    &.bl {
+      bottom: -5px;
+      left: -5px;
+      width: 15px;
+      height: 15px;
+      cursor: sw-resize;
     }
   }
 `;

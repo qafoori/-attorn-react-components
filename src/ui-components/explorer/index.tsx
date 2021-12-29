@@ -19,7 +19,7 @@ export const Explorer: FC<Lib.T.Explorer> = ({
     <Resizable
       w={{ default: width || '250px', max: maxWidth || '500px', min: minWidth || '200px' }}
       h={{ default: '100%', min: '100%', max: '100%' }}
-      handlers={{ t: false, r: true, b: false, l: false }}
+      r
     >
       <Lib.S.Explorer
         onKeyUp={on.shortcutHandler}
