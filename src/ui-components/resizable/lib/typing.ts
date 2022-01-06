@@ -23,3 +23,5 @@ export type ResizeArgs = {
   evt: MouseEvent;
   style: CSSStyleDeclaration;
 }
+
+export type Direction = 't' | 'r' | 'b' | 'l' | 'tr' | 'tl' | 'br' | 'bl' | 'none';

@@ -51,27 +51,27 @@ export const Explorer: FC<Lib.T.Explorer> = ({
             <Scrollbars className='bodyChild'>
               {I.data.map((item, index) =>
                 <Lib.C.Item
-                  key={index}
-                  item={item}
-                  active={states.active.val}
-                  setActive={states.active.set}
-                  collapsed={I.collapsed}
-                  onDragStart={on.dragStart}
-                  onDragEnd={on.dragEnd}
-                  onDragOver={on.dragOver}
-                  onDragLeave={on.dragLeave}
-                  onHelpersDragEnd={on.helpersDragEnd}
+                  onRightClick={(id, type, evt) => on.rightClickHandler(evt, id, type)}
                   disabledItems={states.addNew.val !== undefined}
                   itemIdToAppendNew={states.folderIdToAppendNew}
-                  addNewType={states.addNew.val}
-                  onBlur={on.adderInputBlur}
-                  onKeyUp={on.adderInputKeyUp}
-                  onRightClick={(id, type, evt) => on.rightClickHandler(evt, id, type)}
+                  timingEnabled={states.timingEnabled.val}
                   itemIdToRename={states.itemIdToRename}
+                  pasteEnabled={states.pasteEnabled.val}
+                  onHelpersDragEnd={on.helpersDragEnd}
+                  addNewType={states.addNew.val}
+                  setActive={states.active.set}
+                  onKeyUp={on.adderInputKeyUp}
+                  onDragStart={on.dragStart}
+                  active={states.active.val}
+                  onDragLeave={on.dragLeave}
+                  onBlur={on.adderInputBlur}
+                  onDragOver={on.dragOver}
+                  collapsed={I.collapsed}
+                  onDragEnd={on.dragEnd}
                   onRename={on.rename}
                   styling={styling}
-                  pasteEnabled={states.pasteEnabled.val}
-                  timingEnabled={states.timingEnabled.val}
+                  key={index}
+                  item={item}
                 />
               )}
 

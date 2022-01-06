@@ -14,7 +14,6 @@ export const Resizable: FC<Lib.T.Resizable> = ({
       className={`attorn-studio-resizable-component ${otherProps.className ?? ''}`}
       {...sizes}
     >
-
       {r && <span
         className='resizeHandler r'
         onMouseDown={on.mouseDown}

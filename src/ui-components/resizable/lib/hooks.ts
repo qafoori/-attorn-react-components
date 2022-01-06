@@ -16,53 +16,70 @@ export const useResize = ({ w, h }: Pick<Lib.T.Resizable, 'w' | 'h'>) => {
     min: h?.min || '100px'
   }
 
-  let handler: 't' | 'r' | 'b' | 'l' | 'tr' | 'tl' | 'br' | 'bl' | null = null;
+  class Handler {
+    resizable = <HTMLDivElement>resizableRef.current;
+    attr = 'data-active-handler';
+    get(): Lib.T.Direction {
+      return <Lib.T.Direction>this.resizable.getAttribute(this.attr) || 'none';
+    }
+    set(direction: Lib.T.Direction) {
+      this.resizable.setAttribute(this.attr, direction);
+    }
+  }
 
-  const checkHandler = (evt: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
+  const checkHandler = (evt: React.MouseEvent<HTMLSpanElement, MouseEvent>): Lib.T.Direction => {
     const { classList } = <HTMLSpanElement>evt.target;
     const { style } = document.body;
+    const handler = new Handler();
     if (classList.contains('t')) {
-      handler = 't';
       style.cursor = 'n-resize';
+      handler.set('t');
+      return 't';
     }
     else if (classList.contains('r')) {
-      handler = 'r';
       style.cursor = 'e-resize';
+      handler.set('r');
+      return 'r';
     }
     else if (classList.contains('b')) {
-      handler = 'b';
       style.cursor = 's-resize';
+      handler.set('b');
+      return 'b';
     }
     else if (classList.contains('l')) {
-      handler = 'l';
       style.cursor = 'w-resize';
+      handler.set('l');
+      return 'l';
     }
     else if (classList.contains('tr')) {
-      handler = 'tr';
       style.cursor = 'ne-resize';
+      handler.set('tr');
+      return 'tr';
     }
     else if (classList.contains('tl')) {
-      handler = 'tl';
       style.cursor = 'nw-resize';
+      handler.set('tl');
+      return 'tl';
     }
     else if (classList.contains('br')) {
-      handler = 'br';
       style.cursor = 'se-resize';
+      handler.set('br');
+      return 'br';
     }
     else if (classList.contains('bl')) {
-      handler = 'bl';
       style.cursor = 'sw-resize';
+      handler.set('bl');
+      return 'bl';
+    }
+    else {
+      style.cursor = 'default';
+      handler.set('none');
+      return 'none';
     }
   }
 
   const onMouseDown = (evt: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
     checkHandler(evt);
-    if (handler === 't' || handler === 'b') {
-      document.body.style.cursor = 'row-resize';
-    }
-    else {
-      document.body.style.cursor = 'col-resize';
-    }
     window.addEventListener('mouseup', onMouseUp);
     window.addEventListener('mousemove', onMouseMove);
   }
@@ -71,7 +88,8 @@ export const useResize = ({ w, h }: Pick<Lib.T.Resizable, 'w' | 'h'>) => {
     const { current: resizable } = resizableRef;
     const style = window.getComputedStyle(resizable!)
     const args: Lib.T.ResizeArgs = { resizable, evt, style };
-    switch (handler) {
+    const handler = new Handler();
+    switch (handler.get()) {
       case 'l': resizeL(args); break;
       case 'r': resizeR(args); break;
       case 't': resizeT(args); break;
@@ -82,7 +100,6 @@ export const useResize = ({ w, h }: Pick<Lib.T.Resizable, 'w' | 'h'>) => {
       case 'bl': resizeB(args); resizeL(args); break;
     }
   }, []);
-
 
   const resizeL = ({ evt, resizable, style }: Lib.T.ResizeArgs) => {
     resizable!.style.width = (resizable!.offsetLeft - evt.clientX + parseInt(style.width)) + 'px';
