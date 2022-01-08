@@ -30,3 +30,7 @@ export * as ExplorerT from './ui-components/explorer/lib/typing';
 export { Resizable } from './ui-components/resizable';
 export * as ResizableT from './ui-components/resizable/lib/typing';
 
+export { HorizontalScroll } from './ui-components/horizontal-scroll';
+export * as HorizontalScrollT from './ui-components/horizontal-scroll/lib/typing';
+
+

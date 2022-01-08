@@ -123,8 +123,21 @@ export type HeaderOption = {
 }
 
 export type Methods =
-  'post' | 'delete' | 'patch' | 'get' | 'put' | 'options' | 'head' | 'copy'
-  | 'link' | 'unlink' | 'purge' | 'lock' | 'unlock' | 'propfind' | 'view';
+  | 'post'
+  | 'delete'
+  | 'patch'
+  | 'get'
+  | 'put'
+  | 'options'
+  | 'head'
+  | 'copy'
+  | 'link'
+  | 'unlink'
+  | 'purge'
+  | 'lock'
+  | 'unlock'
+  | 'propfind'
+  | 'view';
 
 
 export type Position = 'above' | 'into' | 'below'
