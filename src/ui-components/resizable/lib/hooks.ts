@@ -1,7 +1,7 @@
 import { useRef, useCallback } from 'react';
 import * as Lib from '.';
 
-export const useResize = ({ w, h }: Pick<Lib.T.Resizable, 'w' | 'h'>) => {
+export const useResize = ({ w, h, setSize }: Pick<Lib.T.Resizable, 'w' | 'h' | 'setSize'>) => {
   const resizableRef = useRef<HTMLDivElement>(null);
 
   const width: Lib.T.Size = {
@@ -101,20 +101,44 @@ export const useResize = ({ w, h }: Pick<Lib.T.Resizable, 'w' | 'h'>) => {
     }
   }, []);
 
+  const dispatchSize = (dir: 'w' | 'h') => {
+    const { current: resizable } = resizableRef;
+    const style = window.getComputedStyle(resizable!)
+    if (dir == 'w') {
+      if (setSize && setSize.w) {
+        setSize.w(style.width);
+      }
+    }
+    else {
+      if (setSize && setSize.h) {
+        setSize.h(style.height);
+      }
+    }
+  }
+
   const resizeL = ({ evt, resizable, style }: Lib.T.ResizeArgs) => {
-    resizable!.style.width = (resizable!.offsetLeft - evt.clientX + parseInt(style.width)) + 'px';
+    const newSize = resizable!.offsetLeft - evt.clientX + parseInt(style.width);
+    resizable!.style.width = newSize + 'px';
+    dispatchSize('w');
   }
 
   const resizeR = ({ evt, resizable }: Lib.T.ResizeArgs) => {
-    resizable!.style.width = (evt.clientX - resizable!.offsetLeft) + 'px';
+    const newSize = evt.clientX - resizable!.offsetLeft;
+    resizable!.style.width = newSize + 'px';
+    dispatchSize('w');
   }
 
   const resizeT = ({ evt, resizable, style }: Lib.T.ResizeArgs) => {
-    resizable!.style.height = (resizable!.offsetTop - evt.clientY + parseInt(style.height)) + 'px';
+    const newSize = resizable!.offsetTop - evt.clientY + parseInt(style.height);
+    resizable!.style.height = newSize + 'px';
+    dispatchSize('h');
   }
 
   const resizeB = ({ evt, resizable }: Lib.T.ResizeArgs) => {
-    resizable!.style.height = (evt.clientY - resizable!.offsetTop) + 'px';
+    const newSize = evt.clientY - resizable!.offsetTop;
+    resizable!.style.height = newSize + 'px';
+    dispatchSize('h');
+
   }
 
   const onMouseUp = useCallback(() => {
@@ -125,7 +149,9 @@ export const useResize = ({ w, h }: Pick<Lib.T.Resizable, 'w' | 'h'>) => {
 
   const onDoubleClick = () => {
     const { current: resizable } = resizableRef;
-    resizable!.style.width = width.default!
+    resizable!.style.width = width.default!;
+    dispatchSize('h')
+    dispatchSize('w')
   }
 
   return {

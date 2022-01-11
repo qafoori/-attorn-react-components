@@ -5,7 +5,7 @@ import { Scrollbars } from 'react-custom-scrollbars';
 import { Resizable } from '../resizable'
 
 export const Explorer: FC<Lib.T.Explorer> = ({
-  maxWidth, minWidth, width, height, styling, data, onAddNew, onReload,
+  maxWidth, minWidth, width, height, styling, data, onAddNew, onReload, resizableProps,
   onRightClick, ContextMenu, contextHandlerState, onErrors, onChangeItems, beforeDelete
   , ..._
 }): JSX.Element => {
@@ -20,6 +20,7 @@ export const Explorer: FC<Lib.T.Explorer> = ({
       w={{ default: width || '250px', max: maxWidth || '500px', min: minWidth || '200px' }}
       h={{ default: '100%', min: '100%', max: '100%' }}
       r
+      {...resizableProps}
     >
       <Lib.S.Explorer
         onKeyUp={on.shortcutHandler}

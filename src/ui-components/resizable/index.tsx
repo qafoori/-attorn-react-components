@@ -2,9 +2,9 @@ import React, { FC } from 'react'
 import * as Lib from './lib'
 
 export const Resizable: FC<Lib.T.Resizable> = ({
-  h, w, children, ...otherProps
+  h, w, children, setSize, ...otherProps
 }): JSX.Element => {
-  const { on, resizableRef, sizes } = Lib.H.useResize({ h, w });
+  const { on, resizableRef, sizes } = Lib.H.useResize({ h, w, setSize });
   const { t, r, b, l, tr, tl, br, bl } = otherProps;
 
   return (

@@ -8,8 +8,10 @@ import {
   SetStateAction
 } from 'react';
 import { Icons } from '../../icon/lib/types';
+import { Resizable } from '../../resizable/lib/typing';
 
 export interface Explorer extends DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+  resizableProps?: Resizable;
   minWidth?: string;
   maxWidth?: string;
   width?: string;

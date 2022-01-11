@@ -1,3 +1,5 @@
+import { Dispatch } from "react";
+
 export interface Resizable extends
   React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
   w?: Size
@@ -10,6 +12,10 @@ export interface Resizable extends
   tl?: boolean;
   br?: boolean;
   bl?: boolean;
+  setSize?: {
+    w?: Dispatch<string>;
+    h?: Dispatch<string>;
+  }
 }
 
 export type Size = {
